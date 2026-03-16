@@ -106,6 +106,38 @@ Una aplicación de escritorio (Wails + Svelte) que sirve como centro de operacio
 | `GOOGLE_CLIENT_SECRET` | Google OAuth2 Client Secret |
 | `MONGODB_URI` | MongoDB Atlas connection string |
 | `OPENCLAW_TOKEN` | Token del gateway de OpenClaw |
+| `OPENCLAW_URL` | URL del endpoint de chat (default: `http://localhost:18789/v1/chat/completions`) |
+
+## Setup de OpenClaw (requerido)
+
+⚠️ **El endpoint de Chat Completions está deshabilitado por defecto en OpenClaw.** Hay que habilitarlo:
+
+```bash
+# Opción 1: Editar openclaw.json manualmente
+# Agregar dentro de "gateway":
+{
+  "gateway": {
+    "http": {
+      "endpoints": {
+        "chatCompletions": {
+          "enabled": true
+        }
+      }
+    }
+  }
+}
+
+# Opción 2: Usar el CLI
+openclaw configure
+# O editar directamente: ~/.openclaw/openclaw.json
+```
+
+Después de habilitar, reiniciar el gateway:
+```bash
+openclaw gateway restart
+```
+
+El token del gateway se encuentra en `~/.openclaw/openclaw.json` bajo `gateway.auth.token`.
 
 ## Seguridad
 
