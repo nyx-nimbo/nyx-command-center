@@ -18,6 +18,10 @@ func init() {
 	if v := os.Getenv("GOOGLE_CLIENT_SECRET"); v != "" {
 		googleClientSecret = v
 	}
+
+	// Update OAuth config since it was initialized before env vars were loaded
+	googleOAuthConfig.ClientID = googleClientID
+	googleOAuthConfig.ClientSecret = googleClientSecret
 	if v := os.Getenv("MONGODB_URI"); v != "" {
 		mongoURI = v
 	}

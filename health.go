@@ -29,10 +29,9 @@ type HealthReport struct {
 	Timestamp string          `json:"timestamp"`
 }
 
-const (
-	mongoURI        = "" // Set via MONGODB_URI env var
-	gatewayCheckURL = "http://localhost:18789/"
-)
+var mongoURI = "" // Set via MONGODB_URI env var
+
+const gatewayCheckURL = "http://localhost:18789/"
 
 // CheckHealth runs health checks against all services and emits events
 func (a *App) CheckHealth() HealthReport {

@@ -16,11 +16,12 @@ import (
 	"golang.org/x/oauth2/google"
 )
 
-const (
+var (
 	googleClientID     = "" // Set via GOOGLE_CLIENT_ID env var
 	googleClientSecret = "" // Set via GOOGLE_CLIENT_SECRET env var
-	googleRedirectURL  = "http://localhost:8099"
 )
+
+const googleRedirectURL = "http://localhost:8099"
 
 var googleOAuthConfig = &oauth2.Config{
 	ClientID:     googleClientID,

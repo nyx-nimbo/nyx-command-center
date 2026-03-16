@@ -193,9 +193,10 @@ type sseChunk struct {
 	Choices []sseChoice `json:"choices"`
 }
 
+var openclawToken = "" // Set via OPENCLAW_TOKEN env var
+
 const (
 	openclawURL   = "http://localhost:18789/v1/chat/completions"
-	openclawToken = "" // Set via OPENCLAW_TOKEN env var
 	openclawAgent = "main"
 	openclawUser  = "nyx-dashboard"
 )
