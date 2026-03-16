@@ -117,6 +117,7 @@ func (a *App) CreateClient(client Client) (Client, error) {
 	if err != nil {
 		return Client{}, fmt.Errorf("insert error: %v", err)
 	}
+	go a.LogActivity("created", "client", client.ID, "Created client: "+client.Name, client.Name)
 	return client, nil
 }
 
@@ -167,6 +168,7 @@ func (a *App) UpdateClient(client Client) (Client, error) {
 	if err != nil {
 		return Client{}, fmt.Errorf("update error: %v", err)
 	}
+	go a.LogActivity("updated", "client", client.ID, "Updated client: "+client.Name, client.Name)
 	return client, nil
 }
 
@@ -183,6 +185,7 @@ func (a *App) DeleteClient(id string) error {
 	// Cascade: delete business units and projects for this client
 	db.Collection("business_units").DeleteMany(context.Background(), bson.M{"clientId": id})
 	db.Collection("projects").DeleteMany(context.Background(), bson.M{"clientId": id})
+	go a.LogActivity("deleted", "client", id, "Deleted client: "+id, "")
 	return nil
 }
 
@@ -203,6 +206,7 @@ func (a *App) CreateBusinessUnit(bu BusinessUnit) (BusinessUnit, error) {
 	if err != nil {
 		return BusinessUnit{}, fmt.Errorf("insert error: %v", err)
 	}
+	go a.LogActivity("created", "business_unit", bu.ID, "Created business unit: "+bu.Name, bu.Name)
 	return bu, nil
 }
 
@@ -239,6 +243,7 @@ func (a *App) UpdateBusinessUnit(bu BusinessUnit) (BusinessUnit, error) {
 	if err != nil {
 		return BusinessUnit{}, fmt.Errorf("update error: %v", err)
 	}
+	go a.LogActivity("updated", "business_unit", bu.ID, "Updated business unit: "+bu.Name, bu.Name)
 	return bu, nil
 }
 
@@ -254,6 +259,7 @@ func (a *App) DeleteBusinessUnit(id string) error {
 	}
 	// Cascade: delete projects for this business unit
 	db.Collection("projects").DeleteMany(context.Background(), bson.M{"businessUnitId": id})
+	go a.LogActivity("deleted", "business_unit", id, "Deleted business unit: "+id, "")
 	return nil
 }
 
@@ -280,6 +286,7 @@ func (a *App) CreateProject(project Project) (Project, error) {
 	if err != nil {
 		return Project{}, fmt.Errorf("insert error: %v", err)
 	}
+	go a.LogActivity("created", "project", project.ID, "Created project: "+project.Name, project.Name)
 	return project, nil
 }
 
@@ -338,6 +345,7 @@ func (a *App) UpdateProject(project Project) (Project, error) {
 	if err != nil {
 		return Project{}, fmt.Errorf("update error: %v", err)
 	}
+	go a.LogActivity("updated", "project", project.ID, "Updated project: "+project.Name, project.Name)
 	return project, nil
 }
 
@@ -353,6 +361,7 @@ func (a *App) DeleteProject(id string) error {
 	}
 	// Cascade: delete tasks for this project
 	db.Collection("tasks").DeleteMany(context.Background(), bson.M{"projectId": id})
+	go a.LogActivity("deleted", "project", id, "Deleted project: "+id, "")
 	return nil
 }
 
@@ -382,6 +391,7 @@ func (a *App) CreateTask(task Task) (Task, error) {
 	if err != nil {
 		return Task{}, fmt.Errorf("insert error: %v", err)
 	}
+	go a.LogActivity("created", "task", task.ID, "Created task: "+task.Title, task.Title)
 	return task, nil
 }
 
@@ -430,6 +440,7 @@ func (a *App) UpdateTask(task Task) (Task, error) {
 	if err != nil {
 		return Task{}, fmt.Errorf("update error: %v", err)
 	}
+	go a.LogActivity("updated", "task", task.ID, "Updated task: "+task.Title, task.Title)
 	return task, nil
 }
 
@@ -443,6 +454,7 @@ func (a *App) DeleteTask(id string) error {
 	if err != nil {
 		return fmt.Errorf("delete error: %v", err)
 	}
+	go a.LogActivity("deleted", "task", id, "Deleted task: "+id, "")
 	return nil
 }
 

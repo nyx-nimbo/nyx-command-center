@@ -12,6 +12,11 @@
   // Handshake state: 'idle' | 'connecting' | 'connected' | 'minimized'
   let handshakeState = 'idle'
 
+  // Sync state
+  let syncActive = false
+  let lastSyncAgo = ''
+  let syncTimer = null
+
   async function checkHandshake() {
     try {
       const status = await window['go']['main']['App']['CheckHandshake']()
@@ -62,6 +67,20 @@
     }
   }
 
+  function updateSyncState() {
+    const wails = window['go']?.['main']?.['App']
+    if (!wails?.GetSyncState) return
+    wails.GetSyncState().then(state => {
+      if (state?.lastSyncTime) {
+        const diff = Date.now() - new Date(state.lastSyncTime).getTime()
+        const secs = Math.floor(diff / 1000)
+        lastSyncAgo = secs < 60 ? secs + 's ago' : Math.floor(secs / 60) + 'm ago'
+      } else {
+        lastSyncAgo = 'never'
+      }
+    }).catch(() => {})
+  }
+
   onMount(() => {
     const runtime = window.runtime
     if (runtime) {
@@ -84,9 +103,16 @@
       runtime.EventsOn('google:authenticated', () => {
         loadUserInfo()
       })
+      runtime.EventsOn('hivemind:new-activity', () => {
+        syncActive = true
+        setTimeout(() => { syncActive = false }, 1500)
+        updateSyncState()
+      })
     }
     if (userEmail) loadUserInfo()
     checkHandshake()
+    updateSyncState()
+    syncTimer = setInterval(updateSyncState, 10000)
     document.addEventListener('click', handleClickOutside)
   })
 
@@ -95,7 +121,9 @@
     if (runtime) {
       runtime.EventsOff('health:report')
       runtime.EventsOff('google:authenticated')
+      runtime.EventsOff('hivemind:new-activity')
     }
+    if (syncTimer) clearInterval(syncTimer)
     document.removeEventListener('click', handleClickOutside)
   })
 
@@ -108,6 +136,10 @@
   </div>
   <div class="header-right">
     <div class="health-dot" style="background: {healthColor}; box-shadow: 0 0 6px {healthColor}40;" title="System Health"></div>
+
+    <div class="sync-indicator" class:syncing={syncActive} title="Hive Mind Sync — Last: {lastSyncAgo}">
+      <span class="sync-icon">{syncActive ? '↻' : '⬡'}</span>
+    </div>
 
     {#if handshakeState === 'idle'}
       <button class="handshake-btn pulse" on:click={performHandshake} title="Connect Agent">
@@ -454,5 +486,28 @@
     background: #22c55e;
     box-shadow: 0 0 6px rgba(34, 197, 94, 0.4);
     animation: handshake-fade-in 0.3s ease;
+  }
+
+  /* Sync Indicator */
+  .sync-indicator {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s;
+    cursor: default;
+  }
+
+  .sync-icon {
+    font-size: 12px;
+    color: var(--text-muted);
+    transition: color 0.3s;
+  }
+
+  .sync-indicator.syncing .sync-icon {
+    color: var(--accent);
+    animation: spin 0.8s linear infinite;
   }
 </style>

@@ -1,5 +1,6 @@
 <script>
   import { push } from 'svelte-spa-router'
+  import { onMount, onDestroy } from 'svelte'
 
   export let params = {}
 
@@ -10,6 +11,7 @@
   let tasks = []
   let stats = null
   let loading = true
+  let projectActivity = []
 
   // Task modal
   let taskModal = false
@@ -139,11 +141,46 @@
     }
   }
 
+  function timeAgo(ts) {
+    if (!ts) return ''
+    const diff = Date.now() - new Date(ts).getTime()
+    const mins = Math.floor(diff / 60000)
+    if (mins < 1) return 'just now'
+    if (mins < 60) return mins + 'm ago'
+    const hrs = Math.floor(mins / 60)
+    if (hrs < 24) return hrs + 'h ago'
+    return Math.floor(hrs / 24) + 'd ago'
+  }
+
+  async function loadProjectActivity() {
+    try {
+      projectActivity = await wails.GetActivityForEntity('project', params.id) || []
+    } catch (e) {
+      projectActivity = []
+    }
+  }
+
   function goBack() {
     push('/clients')
   }
 
-  $: if (params.id) loadProject()
+  let unsubActivity = null
+
+  onMount(() => {
+    const runtime = window.runtime
+    if (runtime) {
+      runtime.EventsOn('hivemind:new-activity', () => {
+        loadProjectActivity()
+      })
+      unsubActivity = () => runtime.EventsOff('hivemind:new-activity')
+    }
+  })
+
+  onDestroy(() => {
+    if (unsubActivity) unsubActivity()
+  })
+
+  $: if (params.id) { loadProject(); loadProjectActivity() }
 </script>
 
 <div class="project-page">
@@ -236,6 +273,28 @@
         </div>
       {/each}
     </div>
+
+    <!-- Project Activity Feed -->
+    {#if projectActivity.length > 0}
+      <div class="project-activity">
+        <div class="pa-header">
+          <span class="pa-title">Activity</span>
+          <span class="pa-count">{projectActivity.length}</span>
+        </div>
+        <div class="pa-list">
+          {#each projectActivity as entry}
+            <div class="pa-item">
+              <span class="pa-action" class:created={entry.action === 'created'} class:updated={entry.action === 'updated'} class:deleted={entry.action === 'deleted'}>
+                {entry.action === 'created' ? '+' : entry.action === 'updated' ? '~' : '-'}
+              </span>
+              <span class="pa-summary">{entry.summary}</span>
+              <span class="pa-instance">{entry.instanceId}</span>
+              <span class="pa-time">{timeAgo(entry.timestamp)}</span>
+            </div>
+          {/each}
+        </div>
+      </div>
+    {/if}
   {/if}
 </div>
 
@@ -806,5 +865,83 @@
     flex: 1;
     min-width: 60px;
     padding: 2px;
+  }
+
+  /* Project Activity */
+  .project-activity {
+    padding: 12px 24px 16px;
+    border-top: 1px solid var(--border-subtle);
+    flex-shrink: 0;
+    max-height: 160px;
+    overflow-y: auto;
+  }
+
+  .pa-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .pa-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .pa-count {
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+
+  .pa-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .pa-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+  }
+
+  .pa-action {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    flex-shrink: 0;
+    background: var(--accent-subtle);
+    color: var(--accent);
+  }
+
+  .pa-action.created { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+  .pa-action.updated { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+  .pa-action.deleted { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+
+  .pa-summary {
+    flex: 1;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .pa-instance {
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .pa-time {
+    color: var(--text-muted);
+    flex-shrink: 0;
   }
 </style>
