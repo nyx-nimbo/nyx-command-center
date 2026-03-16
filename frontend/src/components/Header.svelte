@@ -28,14 +28,23 @@
     }
   }
 
+  let handshakeError = ''
+
   async function performHandshake() {
     handshakeState = 'connecting'
+    handshakeError = ''
     try {
-      await window['go']['main']['App']['PerformHandshake']()
+      console.log('[Handshake] Starting...')
+      console.log('[Handshake] OPENCLAW_URL and token should be set in .env')
+      const result = await window['go']['main']['App']['PerformHandshake']()
+      console.log('[Handshake] Success:', result)
       handshakeState = 'connected'
       setTimeout(() => { handshakeState = 'minimized' }, 3000)
-    } catch {
-      handshakeState = 'idle'
+    } catch (err) {
+      console.error('[Handshake] Error:', err)
+      handshakeError = typeof err === 'string' ? err : err?.message || 'Unknown error'
+      handshakeState = 'error'
+      setTimeout(() => { handshakeState = 'idle' }, 5000)
     }
   }
 
@@ -155,6 +164,11 @@
       <div class="handshake-badge connected">
         <span class="handshake-dot"></span>
         <span class="handshake-text">Agent Connected</span>
+      </div>
+    {:else if handshakeState === 'error'}
+      <div class="handshake-badge error" title={handshakeError}>
+        <span class="handshake-error-icon">⚠</span>
+        <span class="handshake-text">{handshakeError.substring(0, 40)}</span>
       </div>
     {:else if handshakeState === 'minimized'}
       <div class="handshake-dot-only" title="Agent Connected"></div>
@@ -477,6 +491,21 @@
     border-radius: 50%;
     background: #22c55e;
     box-shadow: 0 0 6px rgba(34, 197, 94, 0.4);
+  }
+
+  .handshake-badge.error {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+    font-size: 10px;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .handshake-error-icon {
+    font-size: 12px;
   }
 
   .handshake-dot-only {
