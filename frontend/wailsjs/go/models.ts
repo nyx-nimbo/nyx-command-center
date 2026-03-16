@@ -1,5 +1,35 @@
 export namespace main {
 	
+	export class ActivityLogEntry {
+	    id: string;
+	    instanceId: string;
+	    action: string;
+	    entityType: string;
+	    entityId: string;
+	    summary: string;
+	    data: string;
+	    embedding?: number[];
+	    timestamp: string;
+	    synced: boolean;
+	
+	    static createFrom(source: any = {}) {
+	        return new ActivityLogEntry(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.instanceId = source["instanceId"];
+	        this.action = source["action"];
+	        this.entityType = source["entityType"];
+	        this.entityId = source["entityId"];
+	        this.summary = source["summary"];
+	        this.data = source["data"];
+	        this.embedding = source["embedding"];
+	        this.timestamp = source["timestamp"];
+	        this.synced = source["synced"];
+	    }
+	}
 	export class AppInfo {
 	    name: string;
 	    version: string;
@@ -420,6 +450,58 @@ export namespace main {
 	        this.createdAt = source["createdAt"];
 	    }
 	}
+	export class KnowledgeEntry {
+	    id: string;
+	    type: string;
+	    title: string;
+	    content: string;
+	    tags: string[];
+	    projectId?: string;
+	    embedding?: number[];
+	    createdBy: string;
+	    createdAt: string;
+	    updatedAt: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new KnowledgeEntry(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.type = source["type"];
+	        this.title = source["title"];
+	        this.content = source["content"];
+	        this.tags = source["tags"];
+	        this.projectId = source["projectId"];
+	        this.embedding = source["embedding"];
+	        this.createdBy = source["createdBy"];
+	        this.createdAt = source["createdAt"];
+	        this.updatedAt = source["updatedAt"];
+	    }
+	}
+	export class KnowledgeSearchResult {
+	    title: string;
+	    content: string;
+	    type: string;
+	    tags: string[];
+	    score: number;
+	    createdAt: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new KnowledgeSearchResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.title = source["title"];
+	        this.content = source["content"];
+	        this.type = source["type"];
+	        this.tags = source["tags"];
+	        this.score = source["score"];
+	        this.createdAt = source["createdAt"];
+	    }
+	}
 	export class Project {
 	    id: string;
 	    clientId: string;
@@ -491,6 +573,20 @@ export namespace main {
 	    }
 	}
 	
+	export class SyncState {
+	    lastSyncTime: string;
+	    pendingChanges: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new SyncState(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.lastSyncTime = source["lastSyncTime"];
+	        this.pendingChanges = source["pendingChanges"];
+	    }
+	}
 	export class Task {
 	    id: string;
 	    projectId: string;

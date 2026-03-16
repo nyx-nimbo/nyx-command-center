@@ -195,8 +195,9 @@ type sseChunk struct {
 
 var openclawToken = "" // Set via OPENCLAW_TOKEN env var
 
+var openclawURL = "http://localhost:18789/v1/chat/completions" // Override via OPENCLAW_URL env var
+
 const (
-	openclawURL   = "http://localhost:18789/v1/chat/completions"
 	openclawAgent = "main"
 	openclawUser  = "nyx-dashboard"
 )

@@ -28,6 +28,9 @@ func init() {
 	if v := os.Getenv("OPENCLAW_TOKEN"); v != "" {
 		openclawToken = v
 	}
+	if v := os.Getenv("OPENCLAW_URL"); v != "" {
+		openclawURL = v
+	}
 }
 
 func loadEnvFile() {
