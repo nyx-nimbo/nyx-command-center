@@ -363,6 +363,15 @@ func (a *App) StreamChatWithImages(sessionKey string, message string, imageDataU
 			Content: session.SystemPrompt,
 		})
 	}
+
+	// Inject live DB context so the agent knows current data
+	if dbCtx := a.getDBContext(); dbCtx != "" {
+		messages = append(messages, ChatMessage{
+			Role:    "system",
+			Content: "[Live Database Context]\n" + dbCtx,
+		})
+	}
+
 	messages = append(messages, session.History...)
 	a.sessMu.Unlock()
 

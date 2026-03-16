@@ -30,6 +30,10 @@ func main() {
 		OnStartup:        app.startup,
 		OnDomReady: func(ctx context.Context) {
 			go app.CheckHealth()
+			go app.StartSync()
+		},
+		OnShutdown: func(ctx context.Context) {
+			app.StopSync()
 		},
 		Bind: []interface{}{
 			app,
