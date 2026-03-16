@@ -6,6 +6,8 @@ export function AutoRepair(arg1:string):Promise<main.ServiceStatus>;
 
 export function CheckGoogleAuth():Promise<main.GoogleAuthStatus>;
 
+export function CheckHandshake():Promise<main.HandshakeStatus>;
+
 export function CheckHealth():Promise<main.HealthReport>;
 
 export function ClaimTask(arg1:string,arg2:string):Promise<main.Task>;
@@ -40,6 +42,10 @@ export function GetAppInfo():Promise<main.AppInfo>;
 
 export function GetBusinessUnits(arg1:string):Promise<Array<main.BusinessUnit>>;
 
+export function GetCapabilities():Promise<string>;
+
+export function GetCapabilitiesSummary():Promise<Record<string, any>>;
+
 export function GetChatHistory(arg1:string):Promise<Array<main.ChatMessage>>;
 
 export function GetClient(arg1:string):Promise<main.Client>;
@@ -73,6 +79,8 @@ export function ListChatSessions():Promise<Array<main.ChatSessionInfo>>;
 export function LogoutGoogle():Promise<boolean>;
 
 export function MarkAsRead(arg1:string):Promise<main.SendEmailResult>;
+
+export function PerformHandshake():Promise<string>;
 
 export function SendEmail(arg1:string,arg2:string,arg3:string):Promise<main.SendEmailResult>;
 

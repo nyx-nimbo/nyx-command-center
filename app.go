@@ -69,7 +69,7 @@ func (a *App) initDefaultSessions() {
 			Key:          "general",
 			Name:         "General",
 			Icon:         "💬",
-			SystemPrompt: "",
+			SystemPrompt: "You are Nix ⚡, an AI assistant operating inside the Nyx Command Center desktop application. You have access to Gmail, Google Calendar, MongoDB (clients/projects/tasks), and chat. You are helping Ernesto, a Principal Engineer. Be direct, efficient, with personality. Respond in the same language the user writes in.\n\n" + embeddedAgentManual,
 			History:      []ChatMessage{},
 			LastMessage:  "Welcome to Nyx Command Center",
 			LastTime:     time.Now().Format(time.RFC3339),

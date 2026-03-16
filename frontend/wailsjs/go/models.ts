@@ -336,6 +336,20 @@ export namespace main {
 	        this.picture = source["picture"];
 	    }
 	}
+	export class HandshakeStatus {
+	    connected: boolean;
+	    lastHandshake: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new HandshakeStatus(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.connected = source["connected"];
+	        this.lastHandshake = source["lastHandshake"];
+	    }
+	}
 	export class ServiceStatus {
 	    name: string;
 	    status: string;

@@ -10,6 +10,10 @@ export function CheckGoogleAuth() {
   return window['go']['main']['App']['CheckGoogleAuth']();
 }
 
+export function CheckHandshake() {
+  return window['go']['main']['App']['CheckHandshake']();
+}
+
 export function CheckHealth() {
   return window['go']['main']['App']['CheckHealth']();
 }
@@ -78,6 +82,14 @@ export function GetBusinessUnits(arg1) {
   return window['go']['main']['App']['GetBusinessUnits'](arg1);
 }
 
+export function GetCapabilities() {
+  return window['go']['main']['App']['GetCapabilities']();
+}
+
+export function GetCapabilitiesSummary() {
+  return window['go']['main']['App']['GetCapabilitiesSummary']();
+}
+
 export function GetChatHistory(arg1) {
   return window['go']['main']['App']['GetChatHistory'](arg1);
 }
@@ -144,6 +156,10 @@ export function LogoutGoogle() {
 
 export function MarkAsRead(arg1) {
   return window['go']['main']['App']['MarkAsRead'](arg1);
+}
+
+export function PerformHandshake() {
+  return window['go']['main']['App']['PerformHandshake']();
 }
 
 export function SendEmail(arg1, arg2, arg3) {
