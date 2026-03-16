@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -31,22 +32,51 @@ func init() {
 	if v := os.Getenv("OPENCLAW_URL"); v != "" {
 		openclawURL = v
 	}
+
+	// Debug: log loaded config
+	fmt.Printf("[Config] OPENCLAW_URL=%s\n", openclawURL)
+	fmt.Printf("[Config] OPENCLAW_TOKEN=%s...\n", truncate(openclawToken, 8))
+	fmt.Printf("[Config] MONGODB_URI=%s\n", truncate(mongoURI, 30))
+	fmt.Printf("[Config] GOOGLE_CLIENT_ID=%s\n", truncate(googleClientID, 20))
+}
+
+func truncate(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+	return s[:n] + "..."
 }
 
 func loadEnvFile() {
-	// Try .env in executable directory, then working directory
+	// Search for .env in multiple locations
 	paths := []string{}
+
+	// 1. Executable directory
 	if exe, err := os.Executable(); err == nil {
-		paths = append(paths, filepath.Join(filepath.Dir(exe), ".env"))
+		exeDir := filepath.Dir(exe)
+		paths = append(paths, filepath.Join(exeDir, ".env"))
+		// 2. Parent of executable dir (for build/bin/ structure)
+		paths = append(paths, filepath.Join(filepath.Dir(exeDir), ".env"))
+		// 3. Grandparent (for build/bin/app.exe)
+		paths = append(paths, filepath.Join(filepath.Dir(filepath.Dir(exeDir)), ".env"))
 	}
-	paths = append(paths, ".env")
+
+	// 4. Current working directory
+	if cwd, err := os.Getwd(); err == nil {
+		paths = append(paths, filepath.Join(cwd, ".env"))
+	}
+
+	// 5. Home directory openclaw workspace
+	if home, err := os.UserHomeDir(); err == nil {
+		paths = append(paths, filepath.Join(home, ".openclaw", "workspace", "nyx-command-center", ".env"))
+	}
 
 	for _, p := range paths {
 		f, err := os.Open(p)
 		if err != nil {
 			continue
 		}
-		defer f.Close()
+		fmt.Printf("[Config] Loaded .env from: %s\n", p)
 		scanner := bufio.NewScanner(f)
 		for scanner.Scan() {
 			line := strings.TrimSpace(scanner.Text())
@@ -62,6 +92,8 @@ func loadEnvFile() {
 				}
 			}
 		}
-		break // only load first found
+		f.Close()
+		return // only load first found
 	}
+	fmt.Printf("[Config] WARNING: No .env file found. Searched: %v\n", paths)
 }
