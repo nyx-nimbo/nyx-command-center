@@ -9,6 +9,31 @@
   let userInfo = null
   let showDropdown = false
 
+  // Handshake state: 'idle' | 'connecting' | 'connected' | 'minimized'
+  let handshakeState = 'idle'
+
+  async function checkHandshake() {
+    try {
+      const status = await window['go']['main']['App']['CheckHandshake']()
+      if (status?.connected) {
+        handshakeState = 'minimized'
+      }
+    } catch {
+      // not connected
+    }
+  }
+
+  async function performHandshake() {
+    handshakeState = 'connecting'
+    try {
+      await window['go']['main']['App']['PerformHandshake']()
+      handshakeState = 'connected'
+      setTimeout(() => { handshakeState = 'minimized' }, 3000)
+    } catch {
+      handshakeState = 'idle'
+    }
+  }
+
   async function loadUserInfo() {
     if (!userEmail) return
     try {
@@ -61,6 +86,7 @@
       })
     }
     if (userEmail) loadUserInfo()
+    checkHandshake()
     document.addEventListener('click', handleClickOutside)
   })
 
@@ -82,6 +108,26 @@
   </div>
   <div class="header-right">
     <div class="health-dot" style="background: {healthColor}; box-shadow: 0 0 6px {healthColor}40;" title="System Health"></div>
+
+    {#if handshakeState === 'idle'}
+      <button class="handshake-btn pulse" on:click={performHandshake} title="Connect Agent">
+        <span class="handshake-icon">🤝</span>
+        <span class="handshake-text">Connect Agent</span>
+      </button>
+    {:else if handshakeState === 'connecting'}
+      <div class="handshake-btn connecting">
+        <span class="handshake-spinner"></span>
+        <span class="handshake-text">Connecting...</span>
+      </div>
+    {:else if handshakeState === 'connected'}
+      <div class="handshake-badge connected">
+        <span class="handshake-dot"></span>
+        <span class="handshake-text">Agent Connected</span>
+      </div>
+    {:else if handshakeState === 'minimized'}
+      <div class="handshake-dot-only" title="Agent Connected"></div>
+    {/if}
+
     <div class="status-indicator" class:online={statusOnline} class:offline={!statusOnline}>
       <span class="status-dot"></span>
       <span class="status-text">{statusOnline ? 'Online' : 'Offline'}</span>
@@ -314,5 +360,99 @@
   .dropdown-icon {
     font-size: 14px;
     color: var(--text-muted);
+  }
+
+  /* Handshake */
+  .handshake-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent-subtle);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-sm);
+    padding: 4px 10px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 11px;
+    color: var(--accent);
+    font-weight: 600;
+    transition: background var(--transition-fast), opacity var(--transition-fast);
+  }
+
+  .handshake-btn:hover {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .handshake-btn.pulse {
+    animation: handshake-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes handshake-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  .handshake-icon {
+    font-size: 13px;
+    line-height: 1;
+  }
+
+  .handshake-text {
+    letter-spacing: 0.3px;
+  }
+
+  .handshake-btn.connecting {
+    cursor: default;
+    opacity: 0.8;
+  }
+
+  .handshake-spinner {
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--accent);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .handshake-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 600;
+    color: #22c55e;
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    animation: handshake-fade-in 0.3s ease;
+  }
+
+  @keyframes handshake-fade-in {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .handshake-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 6px rgba(34, 197, 94, 0.4);
+  }
+
+  .handshake-dot-only {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 6px rgba(34, 197, 94, 0.4);
+    animation: handshake-fade-in 0.3s ease;
   }
 </style>
