@@ -369,7 +369,7 @@ func (a *App) doStreamChat(sessionKey string, messages []ChatMessage) {
 	req.Header.Set("x-openclaw-agent-id", openclawAgent)
 	req.Header.Set("x-openclaw-session-key", sessionKey)
 
-	client := &http.Client{Timeout: 120 * time.Second}
+	client := &http.Client{Timeout: 0} // No timeout for SSE streaming
 	resp, err := client.Do(req)
 	if err != nil {
 		runtime.EventsEmit(a.ctx, "chat:error", fmt.Sprintf("Request failed: %v", err))
