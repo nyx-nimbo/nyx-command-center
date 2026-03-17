@@ -10,6 +10,7 @@
   let expandedBU = null
   let loading = true
   let search = ''
+  let unassignedProjects = []
 
   // Modal state
   let modal = null // 'client' | 'bu' | 'project'
@@ -18,11 +19,16 @@
   let editingBU = { clientId: '', name: '', rfc: '', address: '', notes: '' }
   let editingProject = { clientId: '', businessUnitId: '', name: '', description: '', status: 'active', stack: '', repoUrl: '', priority: 'medium', startDate: '', dueDate: '' }
   let deleteConfirm = null
+  let allClients = []
+  let allBusinessUnits = []
 
   async function loadClients() {
     try {
       loading = true
       clients = await wails.GetClients() || []
+      // Load unassigned projects (no clientId)
+      const allProjs = await wails.GetProjects('', '') || []
+      unassignedProjects = allProjs.filter(p => !p.clientId)
     } catch (e) {
       console.error('Failed to load clients:', e)
       clients = []
@@ -150,16 +156,37 @@
   }
 
   // Project modal
-  function openCreateProject(clientId, buId) {
+  async function openCreateProject(clientId, buId) {
     modal = 'project'
     modalMode = 'create'
-    editingProject = { clientId, businessUnitId: buId, name: '', description: '', status: 'active', stack: '', repoUrl: '', priority: 'medium', startDate: '', dueDate: '' }
+    editingProject = { clientId: clientId || '', businessUnitId: buId || '', name: '', description: '', status: 'active', stack: '', repoUrl: '', priority: 'medium', startDate: '', dueDate: '' }
+    try { allClients = await wails.GetClients() || [] } catch { allClients = [] }
+    if (clientId) {
+      try { allBusinessUnits = await wails.GetBusinessUnits(clientId) || [] } catch { allBusinessUnits = [] }
+    } else {
+      allBusinessUnits = []
+    }
   }
 
-  function openEditProject(project) {
+  async function openEditProject(project) {
     modal = 'project'
     modalMode = 'edit'
     editingProject = { ...project }
+    try { allClients = await wails.GetClients() || [] } catch { allClients = [] }
+    if (editingProject.clientId) {
+      try { allBusinessUnits = await wails.GetBusinessUnits(editingProject.clientId) || [] } catch { allBusinessUnits = [] }
+    } else {
+      allBusinessUnits = []
+    }
+  }
+
+  async function onProjectClientChange() {
+    editingProject.businessUnitId = ''
+    if (editingProject.clientId) {
+      try { allBusinessUnits = await wails.GetBusinessUnits(editingProject.clientId) || [] } catch { allBusinessUnits = [] }
+    } else {
+      allBusinessUnits = []
+    }
   }
 
   async function saveProject() {
@@ -171,6 +198,7 @@
       }
       modal = null
       if (editingProject.businessUnitId) await loadProjects(editingProject.clientId, editingProject.businessUnitId)
+      await loadClients()
     } catch (e) {
       console.error('Failed to save project:', e)
     }
@@ -207,6 +235,7 @@
     </div>
     <div class="header-right">
       <input class="search-input" type="text" placeholder="Search clients..." bind:value={search} />
+      <button class="btn-secondary" on:click={() => openCreateProject('', '')}>+ New Project</button>
       <button class="btn-primary" on:click={openCreateClient}>+ New Client</button>
     </div>
   </div>
@@ -306,6 +335,34 @@
         </div>
       {/each}
     </div>
+
+    <!-- Unassigned Projects -->
+    {#if unassignedProjects.length > 0}
+      <div class="unassigned-section">
+        <div class="section-header">
+          <span class="section-title">Unassigned Projects (No Client)</span>
+        </div>
+        <div class="projects-grid">
+          {#each unassignedProjects as project (project.id)}
+            <div class="project-card" on:click={() => openProject(project.id)}>
+              <div class="project-top">
+                <span class="project-name">{project.name}</span>
+                <div class="project-badges">
+                  <span class="badge" style="background: {statusColor(project.status)}20; color: {statusColor(project.status)}">{project.status}</span>
+                  <span class="badge" style="background: {priorityColor(project.priority)}20; color: {priorityColor(project.priority)}">{project.priority}</span>
+                </div>
+              </div>
+              {#if project.description}<div class="project-desc">{project.description}</div>{/if}
+              {#if project.stack}<div class="project-stack">{project.stack}</div>{/if}
+              <div class="project-actions-row" on:click|stopPropagation>
+                <button class="btn-icon" on:click={() => openEditProject(project)} title="Edit">✎</button>
+                <button class="btn-icon btn-danger" on:click={() => { deleteConfirm = { type: 'project', item: project } }} title="Delete">✕</button>
+              </div>
+            </div>
+          {/each}
+        </div>
+      </div>
+    {/if}
   {/if}
 </div>
 
@@ -385,6 +442,26 @@
       <div class="form-group">
         <label>Description</label>
         <textarea bind:value={editingProject.description} placeholder="Project description..." rows="3"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Client (optional)</label>
+          <select bind:value={editingProject.clientId} on:change={onProjectClientChange}>
+            <option value="">(No client)</option>
+            {#each allClients as c}
+              <option value={c.id}>{c.name}</option>
+            {/each}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Business Unit (optional)</label>
+          <select bind:value={editingProject.businessUnitId} disabled={!editingProject.clientId}>
+            <option value="">(None)</option>
+            {#each allBusinessUnits as bu}
+              <option value={bu.id}>{bu.name}</option>
+            {/each}
+          </select>
+        </div>
       </div>
       <div class="form-row">
         <div class="form-group">

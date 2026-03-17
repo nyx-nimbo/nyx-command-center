@@ -61,20 +61,27 @@ type BusinessUnit struct {
 	UpdatedAt string `json:"updatedAt" bson:"updatedAt"`
 }
 
+type PortEntry struct {
+	Port     int    `json:"port" bson:"port"`
+	Service  string `json:"service" bson:"service"`
+	Protocol string `json:"protocol" bson:"protocol"`
+}
+
 type Project struct {
-	ID             string `json:"id" bson:"_id,omitempty"`
-	ClientID       string `json:"clientId" bson:"clientId"`
-	BusinessUnitID string `json:"businessUnitId" bson:"businessUnitId"`
-	Name           string `json:"name" bson:"name"`
-	Description    string `json:"description" bson:"description"`
-	Status         string `json:"status" bson:"status"`
-	Stack          string `json:"stack" bson:"stack"`
-	RepoURL        string `json:"repoUrl" bson:"repoUrl"`
-	Priority       string `json:"priority" bson:"priority"`
-	StartDate      string `json:"startDate" bson:"startDate"`
-	DueDate        string `json:"dueDate" bson:"dueDate"`
-	CreatedAt      string `json:"createdAt" bson:"createdAt"`
-	UpdatedAt      string `json:"updatedAt" bson:"updatedAt"`
+	ID             string      `json:"id" bson:"_id,omitempty"`
+	ClientID       string      `json:"clientId" bson:"clientId"`
+	BusinessUnitID string      `json:"businessUnitId" bson:"businessUnitId"`
+	Name           string      `json:"name" bson:"name"`
+	Description    string      `json:"description" bson:"description"`
+	Status         string      `json:"status" bson:"status"`
+	Stack          string      `json:"stack" bson:"stack"`
+	RepoURL        string      `json:"repoUrl" bson:"repoUrl"`
+	Ports          []PortEntry `json:"ports" bson:"ports"`
+	Priority       string      `json:"priority" bson:"priority"`
+	StartDate      string      `json:"startDate" bson:"startDate"`
+	DueDate        string      `json:"dueDate" bson:"dueDate"`
+	CreatedAt      string      `json:"createdAt" bson:"createdAt"`
+	UpdatedAt      string      `json:"updatedAt" bson:"updatedAt"`
 }
 
 type Task struct {
@@ -280,6 +287,9 @@ func (a *App) CreateProject(project Project) (Project, error) {
 	}
 	if project.Priority == "" {
 		project.Priority = "medium"
+	}
+	if project.Ports == nil {
+		project.Ports = []PortEntry{}
 	}
 
 	_, err = db.Collection("projects").InsertOne(context.Background(), project)
