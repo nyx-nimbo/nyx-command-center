@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -74,17 +75,50 @@ func (a *App) getDBContext() string {
 		}
 	}
 
-	// Ideas summary
-	ideaCursor, err := db.Collection("ideas").Find(ctx, bson.M{"status": bson.M{"$ne": "discarded"}}, options.Find().SetLimit(30))
+	// Ideas summary (with status counts and research info)
+	ideaCursor, err := db.Collection("ideas").Find(ctx, bson.M{"status": bson.M{"$ne": "discarded"}}, options.Find().SetLimit(50))
 	if err == nil {
 		var ideas []bson.M
 		if ideaCursor.All(ctx, &ideas) == nil && len(ideas) > 0 {
-			sb.WriteString(fmt.Sprintf("## Ideas (%d)\n", len(ideas)))
+			ideaStatusCount := map[string]int{}
+			for _, idea := range ideas {
+				s := getString(idea, "status")
+				if s == "" {
+					s = "new"
+				}
+				ideaStatusCount[s]++
+			}
+			sb.WriteString(fmt.Sprintf("## Ideas (%d total)\n", len(ideas)))
+			sb.WriteString("Status breakdown: ")
+			first := true
+			for status, count := range ideaStatusCount {
+				if !first {
+					sb.WriteString(", ")
+				}
+				sb.WriteString(fmt.Sprintf("%s: %d", status, count))
+				first = false
+			}
+			sb.WriteString("\n")
 			for _, idea := range ideas {
 				title := getString(idea, "title")
 				status := getString(idea, "status")
 				category := getString(idea, "category")
-				sb.WriteString(fmt.Sprintf("- %s (Status: %s, Category: %s, ID: %v)\n", title, status, category, idea["_id"]))
+				priority := getString(idea, "priority")
+				researchCount := 0
+				if r, ok := idea["research"]; ok {
+					if arr, ok := r.(primitive.A); ok {
+						researchCount = len(arr)
+					}
+				}
+				projectId := getString(idea, "projectId")
+				extra := ""
+				if researchCount > 0 {
+					extra += fmt.Sprintf(", Research: %d entries", researchCount)
+				}
+				if projectId != "" {
+					extra += fmt.Sprintf(", ProjectID: %s", projectId)
+				}
+				sb.WriteString(fmt.Sprintf("- %s (Status: %s, Category: %s, Priority: %s%s, ID: %v)\n", title, status, category, priority, extra, idea["_id"]))
 			}
 			sb.WriteString("\n")
 		}

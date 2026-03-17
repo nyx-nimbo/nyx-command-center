@@ -10,8 +10,20 @@ export function AddPort(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['AddPort'](arg1, arg2, arg3, arg4);
 }
 
+export function AddResearch(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['main']['App']['AddResearch'](arg1, arg2, arg3, arg4, arg5);
+}
+
+export function AddSuggestedTask(arg1, arg2, arg3) {
+  return window['go']['main']['App']['AddSuggestedTask'](arg1, arg2, arg3);
+}
+
 export function AutoRepair(arg1) {
   return window['go']['main']['App']['AutoRepair'](arg1);
+}
+
+export function AutoResearchIdea(arg1) {
+  return window['go']['main']['App']['AutoResearchIdea'](arg1);
 }
 
 export function CheckGoogleAuth() {
@@ -50,6 +62,14 @@ export function CloneRepository(arg1) {
   return window['go']['main']['App']['CloneRepository'](arg1);
 }
 
+export function ConvertIdeaToProject(arg1) {
+  return window['go']['main']['App']['ConvertIdeaToProject'](arg1);
+}
+
+export function ConvertToGroup(arg1) {
+  return window['go']['main']['App']['ConvertToGroup'](arg1);
+}
+
 export function CreateBusinessUnit(arg1) {
   return window['go']['main']['App']['CreateBusinessUnit'](arg1);
 }
@@ -70,8 +90,16 @@ export function CreateEvent(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['CreateEvent'](arg1, arg2, arg3, arg4);
 }
 
+export function CreateIdea(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['main']['App']['CreateIdea'](arg1, arg2, arg3, arg4, arg5);
+}
+
 export function CreateProject(arg1) {
   return window['go']['main']['App']['CreateProject'](arg1);
+}
+
+export function CreateSubProject(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['main']['App']['CreateSubProject'](arg1, arg2, arg3, arg4, arg5);
 }
 
 export function CreateTask(arg1) {
@@ -90,6 +118,10 @@ export function DeleteEvent(arg1) {
   return window['go']['main']['App']['DeleteEvent'](arg1);
 }
 
+export function DeleteIdea(arg1) {
+  return window['go']['main']['App']['DeleteIdea'](arg1);
+}
+
 export function DeleteProject(arg1) {
   return window['go']['main']['App']['DeleteProject'](arg1);
 }
@@ -98,12 +130,20 @@ export function DeleteSession(arg1) {
   return window['go']['main']['App']['DeleteSession'](arg1);
 }
 
+export function DeleteSubProject(arg1) {
+  return window['go']['main']['App']['DeleteSubProject'](arg1);
+}
+
 export function DeleteTask(arg1) {
   return window['go']['main']['App']['DeleteTask'](arg1);
 }
 
 export function GetActivityForEntity(arg1, arg2) {
   return window['go']['main']['App']['GetActivityForEntity'](arg1, arg2);
+}
+
+export function GetAllGroups() {
+  return window['go']['main']['App']['GetAllGroups']();
 }
 
 export function GetAllProjects() {
@@ -162,8 +202,12 @@ export function GetGoogleUserInfo() {
   return window['go']['main']['App']['GetGoogleUserInfo']();
 }
 
-export function GetIdeas() {
-  return window['go']['main']['App']['GetIdeas']();
+export function GetIdea(arg1) {
+  return window['go']['main']['App']['GetIdea'](arg1);
+}
+
+export function GetIdeas(arg1) {
+  return window['go']['main']['App']['GetIdeas'](arg1);
 }
 
 export function GetInstanceId() {
@@ -184,6 +228,14 @@ export function GetProjects(arg1, arg2) {
 
 export function GetRecentActivity(arg1) {
   return window['go']['main']['App']['GetRecentActivity'](arg1);
+}
+
+export function GetSubProjectCount(arg1) {
+  return window['go']['main']['App']['GetSubProjectCount'](arg1);
+}
+
+export function GetSubProjects(arg1) {
+  return window['go']['main']['App']['GetSubProjects'](arg1);
 }
 
 export function GetSyncState() {
@@ -222,6 +274,18 @@ export function MarkAsRead(arg1) {
   return window['go']['main']['App']['MarkAsRead'](arg1);
 }
 
+export function MoveProjectToGroup(arg1, arg2) {
+  return window['go']['main']['App']['MoveProjectToGroup'](arg1, arg2);
+}
+
+export function MoveProjectToStandalone(arg1) {
+  return window['go']['main']['App']['MoveProjectToStandalone'](arg1);
+}
+
+export function OpenInFinder(arg1) {
+  return window['go']['main']['App']['OpenInFinder'](arg1);
+}
+
 export function OpenInTerminal(arg1) {
   return window['go']['main']['App']['OpenInTerminal'](arg1);
 }
@@ -244,6 +308,10 @@ export function SaveEnvFileContent(arg1, arg2, arg3) {
 
 export function ScanEnvFiles(arg1) {
   return window['go']['main']['App']['ScanEnvFiles'](arg1);
+}
+
+export function SearchIdeas(arg1) {
+  return window['go']['main']['App']['SearchIdeas'](arg1);
 }
 
 export function SearchKnowledge(arg1, arg2) {
@@ -294,8 +362,20 @@ export function UpdateClient(arg1) {
   return window['go']['main']['App']['UpdateClient'](arg1);
 }
 
+export function UpdateIdea(arg1, arg2, arg3, arg4, arg5, arg6, arg7) {
+  return window['go']['main']['App']['UpdateIdea'](arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+}
+
+export function UpdateIdeaNotes(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['UpdateIdeaNotes'](arg1, arg2, arg3, arg4);
+}
+
 export function UpdateProject(arg1) {
   return window['go']['main']['App']['UpdateProject'](arg1);
+}
+
+export function UpdateSuggestedTaskStatus(arg1, arg2, arg3) {
+  return window['go']['main']['App']['UpdateSuggestedTaskStatus'](arg1, arg2, arg3);
 }
 
 export function UpdateTask(arg1) {

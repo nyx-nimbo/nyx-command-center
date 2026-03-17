@@ -462,12 +462,65 @@ export namespace main {
 		    return a;
 		}
 	}
+	export class IdeaSuggestedTask {
+	    title: string;
+	    description: string;
+	    status: string;
+	    createdAt: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new IdeaSuggestedTask(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.title = source["title"];
+	        this.description = source["description"];
+	        this.status = source["status"];
+	        this.createdAt = source["createdAt"];
+	    }
+	}
+	export class IdeaResearchEntry {
+	    type: string;
+	    title: string;
+	    content: string;
+	    source: string;
+	    createdAt: string;
+	    createdBy: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new IdeaResearchEntry(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.type = source["type"];
+	        this.title = source["title"];
+	        this.content = source["content"];
+	        this.source = source["source"];
+	        this.createdAt = source["createdAt"];
+	        this.createdBy = source["createdBy"];
+	    }
+	}
 	export class Idea {
 	    id: string;
 	    title: string;
+	    description: string;
 	    status: string;
+	    category: string;
 	    priority: string;
+	    tags: string[];
+	    research: IdeaResearchEntry[];
+	    suggestedTasks: IdeaSuggestedTask[];
+	    notes: string;
+	    estimatedEffort: string;
+	    potentialRevenue: string;
+	    embedding?: number[];
+	    projectId?: string;
 	    createdAt: string;
+	    updatedAt: string;
+	    lastResearchedAt?: string;
+	    createdBy: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new Idea(source);
@@ -477,11 +530,44 @@ export namespace main {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.id = source["id"];
 	        this.title = source["title"];
+	        this.description = source["description"];
 	        this.status = source["status"];
+	        this.category = source["category"];
 	        this.priority = source["priority"];
+	        this.tags = source["tags"];
+	        this.research = this.convertValues(source["research"], IdeaResearchEntry);
+	        this.suggestedTasks = this.convertValues(source["suggestedTasks"], IdeaSuggestedTask);
+	        this.notes = source["notes"];
+	        this.estimatedEffort = source["estimatedEffort"];
+	        this.potentialRevenue = source["potentialRevenue"];
+	        this.embedding = source["embedding"];
+	        this.projectId = source["projectId"];
 	        this.createdAt = source["createdAt"];
+	        this.updatedAt = source["updatedAt"];
+	        this.lastResearchedAt = source["lastResearchedAt"];
+	        this.createdBy = source["createdBy"];
 	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
 	}
+	
+	
 	export class KnowledgeEntry {
 	    id: string;
 	    type: string;
@@ -574,6 +660,8 @@ export namespace main {
 	    id: string;
 	    clientId: string;
 	    businessUnitId: string;
+	    parentId: string;
+	    isGroup: boolean;
 	    name: string;
 	    description: string;
 	    status: string;
@@ -595,6 +683,8 @@ export namespace main {
 	        this.id = source["id"];
 	        this.clientId = source["clientId"];
 	        this.businessUnitId = source["businessUnitId"];
+	        this.parentId = source["parentId"];
+	        this.isGroup = source["isGroup"];
 	        this.name = source["name"];
 	        this.description = source["description"];
 	        this.status = source["status"];

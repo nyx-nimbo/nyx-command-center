@@ -6,7 +6,13 @@ export function AddKnowledge(arg1:string,arg2:string,arg3:string,arg4:string,arg
 
 export function AddPort(arg1:string,arg2:number,arg3:string,arg4:string):Promise<main.Project>;
 
+export function AddResearch(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string):Promise<main.Idea>;
+
+export function AddSuggestedTask(arg1:string,arg2:string,arg3:string):Promise<main.Idea>;
+
 export function AutoRepair(arg1:string):Promise<main.ServiceStatus>;
+
+export function AutoResearchIdea(arg1:string):Promise<void>;
 
 export function CheckGoogleAuth():Promise<main.GoogleAuthStatus>;
 
@@ -26,6 +32,10 @@ export function ClearChatHistory(arg1:string):Promise<void>;
 
 export function CloneRepository(arg1:string):Promise<string>;
 
+export function ConvertIdeaToProject(arg1:string):Promise<main.Project>;
+
+export function ConvertToGroup(arg1:string):Promise<main.Project>;
+
 export function CreateBusinessUnit(arg1:main.BusinessUnit):Promise<main.BusinessUnit>;
 
 export function CreateChatSession(arg1:string,arg2:string):Promise<main.ChatSessionInfo>;
@@ -36,7 +46,11 @@ export function CreateEnvFromExample(arg1:string,arg2:string):Promise<void>;
 
 export function CreateEvent(arg1:string,arg2:string,arg3:string,arg4:string):Promise<main.CreateEventResult>;
 
+export function CreateIdea(arg1:string,arg2:string,arg3:string,arg4:string,arg5:Array<string>):Promise<main.Idea>;
+
 export function CreateProject(arg1:main.Project):Promise<main.Project>;
+
+export function CreateSubProject(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string):Promise<main.Project>;
 
 export function CreateTask(arg1:main.Task):Promise<main.Task>;
 
@@ -46,13 +60,19 @@ export function DeleteClient(arg1:string):Promise<void>;
 
 export function DeleteEvent(arg1:string):Promise<main.DeleteEventResult>;
 
+export function DeleteIdea(arg1:string):Promise<void>;
+
 export function DeleteProject(arg1:string):Promise<void>;
 
 export function DeleteSession(arg1:string):Promise<boolean>;
 
+export function DeleteSubProject(arg1:string):Promise<void>;
+
 export function DeleteTask(arg1:string):Promise<void>;
 
 export function GetActivityForEntity(arg1:string,arg2:string):Promise<Array<main.ActivityLogEntry>>;
+
+export function GetAllGroups():Promise<Array<main.Project>>;
 
 export function GetAllProjects():Promise<Array<main.Project>>;
 
@@ -82,7 +102,9 @@ export function GetEnvVariables(arg1:string,arg2:string):Promise<Array<main.EnvV
 
 export function GetGoogleUserInfo():Promise<main.GoogleUserInfo>;
 
-export function GetIdeas():Promise<Array<main.Idea>>;
+export function GetIdea(arg1:string):Promise<main.Idea>;
+
+export function GetIdeas(arg1:string):Promise<Array<main.Idea>>;
 
 export function GetInstanceId():Promise<string>;
 
@@ -93,6 +115,10 @@ export function GetProjectStats(arg1:string):Promise<main.ProjectStats>;
 export function GetProjects(arg1:string,arg2:string):Promise<Array<main.Project>>;
 
 export function GetRecentActivity(arg1:number):Promise<Array<main.ActivityLogEntry>>;
+
+export function GetSubProjectCount(arg1:string):Promise<number>;
+
+export function GetSubProjects(arg1:string):Promise<Array<main.Project>>;
 
 export function GetSyncState():Promise<main.SyncState>;
 
@@ -112,6 +138,12 @@ export function LogoutGoogle():Promise<boolean>;
 
 export function MarkAsRead(arg1:string):Promise<main.SendEmailResult>;
 
+export function MoveProjectToGroup(arg1:string,arg2:string):Promise<main.Project>;
+
+export function MoveProjectToStandalone(arg1:string):Promise<main.Project>;
+
+export function OpenInFinder(arg1:string):Promise<void>;
+
 export function OpenInTerminal(arg1:string):Promise<void>;
 
 export function PerformHandshake():Promise<string>;
@@ -123,6 +155,8 @@ export function RemovePort(arg1:string,arg2:number):Promise<main.Project>;
 export function SaveEnvFileContent(arg1:string,arg2:string,arg3:string):Promise<void>;
 
 export function ScanEnvFiles(arg1:string):Promise<Array<main.EnvFileStatus>>;
+
+export function SearchIdeas(arg1:string):Promise<Array<main.Idea>>;
 
 export function SearchKnowledge(arg1:string,arg2:number):Promise<Array<main.KnowledgeSearchResult>>;
 
@@ -148,6 +182,12 @@ export function UpdateBusinessUnit(arg1:main.BusinessUnit):Promise<main.Business
 
 export function UpdateClient(arg1:main.Client):Promise<main.Client>;
 
+export function UpdateIdea(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string,arg6:string,arg7:Array<string>):Promise<main.Idea>;
+
+export function UpdateIdeaNotes(arg1:string,arg2:string,arg3:string,arg4:string):Promise<main.Idea>;
+
 export function UpdateProject(arg1:main.Project):Promise<main.Project>;
+
+export function UpdateSuggestedTaskStatus(arg1:string,arg2:number,arg3:string):Promise<main.Idea>;
 
 export function UpdateTask(arg1:main.Task):Promise<main.Task>;
