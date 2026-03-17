@@ -7,9 +7,9 @@
   const navItems = [
     { path: '/chat', label: 'Chat', icon: '⬡' },
     { path: '/', label: 'Dashboard', icon: '◈' },
+    { path: '/ideas', label: 'Ideas', icon: '◆' },
     { path: '/projects', label: 'Projects', icon: '◧' },
     { path: '/clients', label: 'Clients', icon: '▣' },
-    { path: '/ideas', label: 'Ideas', icon: '◆' },
     { path: '/email', label: 'Email', icon: '✉' },
     { path: '/calendar', label: 'Calendar', icon: '▦' },
     { path: '/settings', label: 'Settings', icon: '⚙' },

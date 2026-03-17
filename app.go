@@ -109,48 +109,6 @@ func (a *App) GetAppInfo() AppInfo {
 	}
 }
 
-// Idea represents a single idea item
-type Idea struct {
-	ID        string `json:"id"`
-	Title     string `json:"title"`
-	Status    string `json:"status"`
-	Priority  string `json:"priority"`
-	CreatedAt string `json:"createdAt"`
-}
-
-// GetIdeas returns sample idea data
-func (a *App) GetIdeas() []Idea {
-	return []Idea{
-		{
-			ID:        "1",
-			Title:     "Build Nyx voice interface",
-			Status:    "in-progress",
-			Priority:  "high",
-			CreatedAt: time.Now().AddDate(0, 0, -3).Format(time.RFC3339),
-		},
-		{
-			ID:        "2",
-			Title:     "Integrate email summarization",
-			Status:    "todo",
-			Priority:  "medium",
-			CreatedAt: time.Now().AddDate(0, 0, -1).Format(time.RFC3339),
-		},
-		{
-			ID:        "3",
-			Title:     "Calendar conflict detector",
-			Status:    "todo",
-			Priority:  "low",
-			CreatedAt: time.Now().Format(time.RFC3339),
-		},
-		{
-			ID:        "4",
-			Title:     "MongoDB Atlas sync pipeline",
-			Status:    "done",
-			Priority:  "high",
-			CreatedAt: time.Now().AddDate(0, 0, -7).Format(time.RFC3339),
-		},
-	}
-}
 
 // --- Chat types and methods ---
 

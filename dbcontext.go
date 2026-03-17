@@ -74,6 +74,22 @@ func (a *App) getDBContext() string {
 		}
 	}
 
+	// Ideas summary
+	ideaCursor, err := db.Collection("ideas").Find(ctx, bson.M{"status": bson.M{"$ne": "discarded"}}, options.Find().SetLimit(30))
+	if err == nil {
+		var ideas []bson.M
+		if ideaCursor.All(ctx, &ideas) == nil && len(ideas) > 0 {
+			sb.WriteString(fmt.Sprintf("## Ideas (%d)\n", len(ideas)))
+			for _, idea := range ideas {
+				title := getString(idea, "title")
+				status := getString(idea, "status")
+				category := getString(idea, "category")
+				sb.WriteString(fmt.Sprintf("- %s (Status: %s, Category: %s, ID: %v)\n", title, status, category, idea["_id"]))
+			}
+			sb.WriteString("\n")
+		}
+	}
+
 	// Recent activity (last 5)
 	actOpts := options.Find().SetSort(bson.D{{Key: "timestamp", Value: -1}}).SetLimit(5)
 	actCursor, err := db.Collection("activity_log").Find(ctx, bson.M{}, actOpts)
