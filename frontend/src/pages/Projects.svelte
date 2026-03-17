@@ -153,7 +153,7 @@
     <div class="loading">Loading projects...</div>
   {:else if filtered.length === 0}
     <div class="empty-state">
-      <div class="empty-icon">&#9782;</div>
+      <div class="empty-icon">📋</div>
       <p>{search || statusFilter !== 'all' ? 'No projects match your filters' : 'No projects yet'}</p>
       {#if !search && statusFilter === 'all'}
         <button class="btn-primary" on:click={openCreateProject}>Create your first project</button>
@@ -164,7 +164,7 @@
       {#each filtered as project (project.id)}
         <div class="project-card" on:click={() => openProject(project.id)}>
           <div class="project-top">
-            <span class="project-type-icon">{project.isGroup ? '&#128193;' : '&#9776;'}</span>
+            <span class="project-type-icon">{project.isGroup ? '📁' : '💻'}</span>
             <span class="project-name">{project.name}</span>
             <div class="project-badges">
               {#if project.isGroup && subProjectCounts[project.id]}
@@ -180,8 +180,8 @@
           {#if project.description}<div class="project-desc">{project.description}</div>{/if}
           {#if project.stack}<div class="project-stack">{project.stack}</div>{/if}
           <div class="project-actions-row" on:click|stopPropagation>
-            <button class="btn-icon" on:click={() => openEditProject(project)} title="Edit">&#9998;</button>
-            <button class="btn-icon btn-danger" on:click={() => { deleteConfirm = project }} title="Delete">&#10005;</button>
+            <button class="btn-icon" on:click={() => openEditProject(project)} title="Edit">✏️</button>
+            <button class="btn-icon btn-danger" on:click={() => { deleteConfirm = project }} title="Delete">✕</button>
           </div>
         </div>
       {/each}
