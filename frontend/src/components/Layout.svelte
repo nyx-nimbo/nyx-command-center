@@ -10,6 +10,7 @@
   const pageTitles = {
     '/': 'Dashboard',
     '/chat': 'Chat',
+    '/projects': 'Projects',
     '/ideas': 'Ideas',
     '/email': 'Email',
     '/calendar': 'Calendar',

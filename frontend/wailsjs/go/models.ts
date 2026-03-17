@@ -334,6 +334,38 @@ export namespace main {
 		    return a;
 		}
 	}
+	export class EnvFileStatus {
+	    name: string;
+	    exists: boolean;
+	    exampleExists: boolean;
+	    path: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new EnvFileStatus(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.name = source["name"];
+	        this.exists = source["exists"];
+	        this.exampleExists = source["exampleExists"];
+	        this.path = source["path"];
+	    }
+	}
+	export class EnvVar {
+	    key: string;
+	    value: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new EnvVar(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.key = source["key"];
+	        this.value = source["value"];
+	    }
+	}
 	export class GoogleAuthStatus {
 	    authenticated: boolean;
 	    email: string;
@@ -502,6 +534,42 @@ export namespace main {
 	        this.createdAt = source["createdAt"];
 	    }
 	}
+	export class PortEntry {
+	    port: number;
+	    service: string;
+	    protocol: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new PortEntry(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.port = source["port"];
+	        this.service = source["service"];
+	        this.protocol = source["protocol"];
+	    }
+	}
+	export class PortWithProject {
+	    port: number;
+	    service: string;
+	    protocol: string;
+	    projectId: string;
+	    projectName: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new PortWithProject(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.port = source["port"];
+	        this.service = source["service"];
+	        this.protocol = source["protocol"];
+	        this.projectId = source["projectId"];
+	        this.projectName = source["projectName"];
+	    }
+	}
 	export class Project {
 	    id: string;
 	    clientId: string;
@@ -511,6 +579,7 @@ export namespace main {
 	    status: string;
 	    stack: string;
 	    repoUrl: string;
+	    ports: PortEntry[];
 	    priority: string;
 	    startDate: string;
 	    dueDate: string;
@@ -531,11 +600,50 @@ export namespace main {
 	        this.status = source["status"];
 	        this.stack = source["stack"];
 	        this.repoUrl = source["repoUrl"];
+	        this.ports = this.convertValues(source["ports"], PortEntry);
 	        this.priority = source["priority"];
 	        this.startDate = source["startDate"];
 	        this.dueDate = source["dueDate"];
 	        this.createdAt = source["createdAt"];
 	        this.updatedAt = source["updatedAt"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class ProjectLocalStatus {
+	    isCloned: boolean;
+	    localPath: string;
+	    currentBranch: string;
+	    hasUncommittedChanges: boolean;
+	    lastCommit: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new ProjectLocalStatus(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.isCloned = source["isCloned"];
+	        this.localPath = source["localPath"];
+	        this.currentBranch = source["currentBranch"];
+	        this.hasUncommittedChanges = source["hasUncommittedChanges"];
+	        this.lastCommit = source["lastCommit"];
 	    }
 	}
 	export class ProjectStats {

@@ -13,14 +13,11 @@
   let unassignedProjects = []
 
   // Modal state
-  let modal = null // 'client' | 'bu' | 'project'
+  let modal = null // 'client' | 'bu'
   let modalMode = 'create' // 'create' | 'edit'
   let editingClient = { name: '', contactName: '', contactEmail: '', phone: '', notes: '' }
   let editingBU = { clientId: '', name: '', rfc: '', address: '', notes: '' }
-  let editingProject = { clientId: '', businessUnitId: '', name: '', description: '', status: 'active', stack: '', repoUrl: '', priority: 'medium', startDate: '', dueDate: '' }
   let deleteConfirm = null
-  let allClients = []
-  let allBusinessUnits = []
 
   async function loadClients() {
     try {
@@ -118,9 +115,6 @@
         await wails.DeleteBusinessUnit(deleteConfirm.item.id)
         expandedBU = null
         if (expandedClient) await loadBusinessUnits(expandedClient)
-      } else if (deleteConfirm.type === 'project') {
-        await wails.DeleteProject(deleteConfirm.item.id)
-        if (expandedBU) await loadProjects(expandedClient, expandedBU)
       }
     } catch (e) {
       console.error('Delete failed:', e)
@@ -155,55 +149,6 @@
     }
   }
 
-  // Project modal
-  async function openCreateProject(clientId, buId) {
-    modal = 'project'
-    modalMode = 'create'
-    editingProject = { clientId: clientId || '', businessUnitId: buId || '', name: '', description: '', status: 'active', stack: '', repoUrl: '', priority: 'medium', startDate: '', dueDate: '' }
-    try { allClients = await wails.GetClients() || [] } catch { allClients = [] }
-    if (clientId) {
-      try { allBusinessUnits = await wails.GetBusinessUnits(clientId) || [] } catch { allBusinessUnits = [] }
-    } else {
-      allBusinessUnits = []
-    }
-  }
-
-  async function openEditProject(project) {
-    modal = 'project'
-    modalMode = 'edit'
-    editingProject = { ...project }
-    try { allClients = await wails.GetClients() || [] } catch { allClients = [] }
-    if (editingProject.clientId) {
-      try { allBusinessUnits = await wails.GetBusinessUnits(editingProject.clientId) || [] } catch { allBusinessUnits = [] }
-    } else {
-      allBusinessUnits = []
-    }
-  }
-
-  async function onProjectClientChange() {
-    editingProject.businessUnitId = ''
-    if (editingProject.clientId) {
-      try { allBusinessUnits = await wails.GetBusinessUnits(editingProject.clientId) || [] } catch { allBusinessUnits = [] }
-    } else {
-      allBusinessUnits = []
-    }
-  }
-
-  async function saveProject() {
-    try {
-      if (modalMode === 'create') {
-        await wails.CreateProject(editingProject)
-      } else {
-        await wails.UpdateProject(editingProject)
-      }
-      modal = null
-      if (editingProject.businessUnitId) await loadProjects(editingProject.clientId, editingProject.businessUnitId)
-      await loadClients()
-    } catch (e) {
-      console.error('Failed to save project:', e)
-    }
-  }
-
   function openProject(projectId) {
     push(`/project/${projectId}`)
   }
@@ -235,7 +180,6 @@
     </div>
     <div class="header-right">
       <input class="search-input" type="text" placeholder="Search clients..." bind:value={search} />
-      <button class="btn-secondary" on:click={() => openCreateProject('', '')}>+ New Project</button>
       <button class="btn-primary" on:click={openCreateClient}>+ New Client</button>
     </div>
   </div>
@@ -299,29 +243,17 @@
                       <div class="bu-body">
                         <div class="section-header">
                           <span class="section-title">Projects</span>
-                          <button class="btn-small" on:click={() => openCreateProject(client.id, bu.id)}>+ Add</button>
                         </div>
 
                         {#if !projects[bu.id] || projects[bu.id].length === 0}
                           <div class="empty-sub">No projects yet</div>
                         {:else}
-                          <div class="projects-grid">
+                          <div class="project-links">
                             {#each projects[bu.id] as project (project.id)}
-                              <div class="project-card" on:click={() => openProject(project.id)}>
-                                <div class="project-top">
-                                  <span class="project-name">{project.name}</span>
-                                  <div class="project-badges">
-                                    <span class="badge" style="background: {statusColor(project.status)}20; color: {statusColor(project.status)}">{project.status}</span>
-                                    <span class="badge" style="background: {priorityColor(project.priority)}20; color: {priorityColor(project.priority)}">{project.priority}</span>
-                                  </div>
-                                </div>
-                                {#if project.description}<div class="project-desc">{project.description}</div>{/if}
-                                {#if project.stack}<div class="project-stack">{project.stack}</div>{/if}
-                                <div class="project-actions-row" on:click|stopPropagation>
-                                  <button class="btn-icon" on:click={() => openEditProject(project)} title="Edit">✎</button>
-                                  <button class="btn-icon btn-danger" on:click={() => { deleteConfirm = { type: 'project', item: project } }} title="Delete">✕</button>
-                                </div>
-                              </div>
+                              <a class="project-link" href={null} on:click={() => openProject(project.id)}>
+                                <span class="project-link-name">{project.name}</span>
+                                <span class="badge" style="background: {statusColor(project.status)}20; color: {statusColor(project.status)}">{project.status}</span>
+                              </a>
                             {/each}
                           </div>
                         {/if}
@@ -342,23 +274,12 @@
         <div class="section-header">
           <span class="section-title">Unassigned Projects (No Client)</span>
         </div>
-        <div class="projects-grid">
+        <div class="project-links">
           {#each unassignedProjects as project (project.id)}
-            <div class="project-card" on:click={() => openProject(project.id)}>
-              <div class="project-top">
-                <span class="project-name">{project.name}</span>
-                <div class="project-badges">
-                  <span class="badge" style="background: {statusColor(project.status)}20; color: {statusColor(project.status)}">{project.status}</span>
-                  <span class="badge" style="background: {priorityColor(project.priority)}20; color: {priorityColor(project.priority)}">{project.priority}</span>
-                </div>
-              </div>
-              {#if project.description}<div class="project-desc">{project.description}</div>{/if}
-              {#if project.stack}<div class="project-stack">{project.stack}</div>{/if}
-              <div class="project-actions-row" on:click|stopPropagation>
-                <button class="btn-icon" on:click={() => openEditProject(project)} title="Edit">✎</button>
-                <button class="btn-icon btn-danger" on:click={() => { deleteConfirm = { type: 'project', item: project } }} title="Delete">✕</button>
-              </div>
-            </div>
+            <a class="project-link" href={null} on:click={() => openProject(project.id)}>
+              <span class="project-link-name">{project.name}</span>
+              <span class="badge" style="background: {statusColor(project.status)}20; color: {statusColor(project.status)}">{project.status}</span>
+            </a>
           {/each}
         </div>
       </div>
@@ -426,84 +347,6 @@
       <div class="modal-actions">
         <button class="btn-secondary" on:click={() => modal = null}>Cancel</button>
         <button class="btn-primary" on:click={saveBU} disabled={!editingBU.name}>Save</button>
-      </div>
-    </div>
-  </div>
-{/if}
-
-{#if modal === 'project'}
-  <div class="modal-overlay" on:click={() => modal = null}>
-    <div class="modal" on:click|stopPropagation>
-      <h2>{modalMode === 'create' ? 'New Project' : 'Edit Project'}</h2>
-      <div class="form-group">
-        <label>Name *</label>
-        <input type="text" bind:value={editingProject.name} placeholder="Project name" />
-      </div>
-      <div class="form-group">
-        <label>Description</label>
-        <textarea bind:value={editingProject.description} placeholder="Project description..." rows="3"></textarea>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Client (optional)</label>
-          <select bind:value={editingProject.clientId} on:change={onProjectClientChange}>
-            <option value="">(No client)</option>
-            {#each allClients as c}
-              <option value={c.id}>{c.name}</option>
-            {/each}
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Business Unit (optional)</label>
-          <select bind:value={editingProject.businessUnitId} disabled={!editingProject.clientId}>
-            <option value="">(None)</option>
-            {#each allBusinessUnits as bu}
-              <option value={bu.id}>{bu.name}</option>
-            {/each}
-          </select>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Status</label>
-          <select bind:value={editingProject.status}>
-            <option value="active">Active</option>
-            <option value="paused">Paused</option>
-            <option value="completed">Completed</option>
-            <option value="archived">Archived</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Priority</label>
-          <select bind:value={editingProject.priority}>
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-            <option value="urgent">Urgent</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Stack</label>
-        <input type="text" bind:value={editingProject.stack} placeholder="e.g. React Native, Node.js, MongoDB" />
-      </div>
-      <div class="form-group">
-        <label>Repository URL</label>
-        <input type="text" bind:value={editingProject.repoUrl} placeholder="https://github.com/..." />
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Start Date</label>
-          <input type="date" bind:value={editingProject.startDate} />
-        </div>
-        <div class="form-group">
-          <label>Due Date</label>
-          <input type="date" bind:value={editingProject.dueDate} />
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button class="btn-secondary" on:click={() => modal = null}>Cancel</button>
-        <button class="btn-primary" on:click={saveProject} disabled={!editingProject.name}>Save</button>
       </div>
     </div>
   </div>
@@ -666,7 +509,7 @@
     margin-top: 2px;
   }
 
-  .client-actions, .bu-actions, .project-actions-row {
+  .client-actions, .bu-actions {
     display: flex;
     gap: 4px;
     opacity: 0;
@@ -674,8 +517,7 @@
   }
 
   .client-header:hover .client-actions,
-  .bu-header:hover .bu-actions,
-  .project-card:hover .project-actions-row {
+  .bu-header:hover .bu-actions {
     opacity: 1;
   }
 
@@ -746,44 +588,31 @@
     padding: 10px 12px 12px;
   }
 
-  .projects-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 8px;
+  .project-links {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
   }
 
-  .project-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
+  .project-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
     border-radius: var(--radius-sm);
-    padding: 12px;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background var(--transition-fast);
+    text-decoration: none;
   }
 
-  .project-card:hover {
-    border-color: var(--accent);
+  .project-link:hover {
     background: var(--bg-card-hover);
   }
 
-  .project-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 8px;
-    margin-bottom: 6px;
-  }
-
-  .project-name {
-    font-weight: 600;
+  .project-link-name {
     font-size: 13px;
+    font-weight: 500;
     color: var(--text-primary);
-  }
-
-  .project-badges {
-    display: flex;
-    gap: 4px;
-    flex-shrink: 0;
   }
 
   .badge {
@@ -794,24 +623,8 @@
     text-transform: uppercase;
   }
 
-  .project-desc {
-    font-size: 12px;
-    color: var(--text-secondary);
-    margin-bottom: 4px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .project-stack {
-    font-size: 11px;
-    color: var(--text-muted);
-    margin-bottom: 4px;
-  }
-
-  .project-actions-row {
-    margin-top: 6px;
-    justify-content: flex-end;
+  .unassigned-section {
+    margin-top: 24px;
   }
 
   /* Buttons */

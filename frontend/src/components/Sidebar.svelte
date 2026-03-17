@@ -7,6 +7,7 @@
   const navItems = [
     { path: '/chat', label: 'Chat', icon: '⬡' },
     { path: '/', label: 'Dashboard', icon: '◈' },
+    { path: '/projects', label: 'Projects', icon: '◧' },
     { path: '/clients', label: 'Clients', icon: '▣' },
     { path: '/ideas', label: 'Ideas', icon: '◆' },
     { path: '/email', label: 'Email', icon: '✉' },
@@ -39,7 +40,7 @@
         href={item.path}
         use:link
         class="nav-item"
-        class:active={$location === item.path || (item.path === '/clients' && $location.startsWith('/project/'))}
+        class:active={$location === item.path || (item.path === '/projects' && $location.startsWith('/project/'))}
         title={collapsed ? item.label : ''}
       >
         <span class="nav-icon">{item.icon}</span>

@@ -6,6 +6,10 @@ export function AddKnowledge(arg1, arg2, arg3, arg4, arg5) {
   return window['go']['main']['App']['AddKnowledge'](arg1, arg2, arg3, arg4, arg5);
 }
 
+export function AddPort(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['AddPort'](arg1, arg2, arg3, arg4);
+}
+
 export function AutoRepair(arg1) {
   return window['go']['main']['App']['AutoRepair'](arg1);
 }
@@ -22,12 +26,28 @@ export function CheckHealth() {
   return window['go']['main']['App']['CheckHealth']();
 }
 
+export function CheckLocalRepo(arg1) {
+  return window['go']['main']['App']['CheckLocalRepo'](arg1);
+}
+
+export function CheckPortConflicts(arg1) {
+  return window['go']['main']['App']['CheckPortConflicts'](arg1);
+}
+
+export function CheckPortInUse(arg1) {
+  return window['go']['main']['App']['CheckPortInUse'](arg1);
+}
+
 export function ClaimTask(arg1, arg2) {
   return window['go']['main']['App']['ClaimTask'](arg1, arg2);
 }
 
 export function ClearChatHistory(arg1) {
   return window['go']['main']['App']['ClearChatHistory'](arg1);
+}
+
+export function CloneRepository(arg1) {
+  return window['go']['main']['App']['CloneRepository'](arg1);
 }
 
 export function CreateBusinessUnit(arg1) {
@@ -40,6 +60,10 @@ export function CreateChatSession(arg1, arg2) {
 
 export function CreateClient(arg1) {
   return window['go']['main']['App']['CreateClient'](arg1);
+}
+
+export function CreateEnvFromExample(arg1, arg2) {
+  return window['go']['main']['App']['CreateEnvFromExample'](arg1, arg2);
 }
 
 export function CreateEvent(arg1, arg2, arg3, arg4) {
@@ -82,6 +106,14 @@ export function GetActivityForEntity(arg1, arg2) {
   return window['go']['main']['App']['GetActivityForEntity'](arg1, arg2);
 }
 
+export function GetAllProjects() {
+  return window['go']['main']['App']['GetAllProjects']();
+}
+
+export function GetAllUsedPorts() {
+  return window['go']['main']['App']['GetAllUsedPorts']();
+}
+
 export function GetAppInfo() {
   return window['go']['main']['App']['GetAppInfo']();
 }
@@ -116,6 +148,14 @@ export function GetEmail(arg1) {
 
 export function GetEmails(arg1) {
   return window['go']['main']['App']['GetEmails'](arg1);
+}
+
+export function GetEnvFileContent(arg1, arg2) {
+  return window['go']['main']['App']['GetEnvFileContent'](arg1, arg2);
+}
+
+export function GetEnvVariables(arg1, arg2) {
+  return window['go']['main']['App']['GetEnvVariables'](arg1, arg2);
 }
 
 export function GetGoogleUserInfo() {
@@ -182,8 +222,28 @@ export function MarkAsRead(arg1) {
   return window['go']['main']['App']['MarkAsRead'](arg1);
 }
 
+export function OpenInTerminal(arg1) {
+  return window['go']['main']['App']['OpenInTerminal'](arg1);
+}
+
 export function PerformHandshake() {
   return window['go']['main']['App']['PerformHandshake']();
+}
+
+export function PullLatest(arg1) {
+  return window['go']['main']['App']['PullLatest'](arg1);
+}
+
+export function RemovePort(arg1, arg2) {
+  return window['go']['main']['App']['RemovePort'](arg1, arg2);
+}
+
+export function SaveEnvFileContent(arg1, arg2, arg3) {
+  return window['go']['main']['App']['SaveEnvFileContent'](arg1, arg2, arg3);
+}
+
+export function ScanEnvFiles(arg1) {
+  return window['go']['main']['App']['ScanEnvFiles'](arg1);
 }
 
 export function SearchKnowledge(arg1, arg2) {
@@ -192,6 +252,14 @@ export function SearchKnowledge(arg1, arg2) {
 
 export function SendEmail(arg1, arg2, arg3) {
   return window['go']['main']['App']['SendEmail'](arg1, arg2, arg3);
+}
+
+export function SetEnvVariable(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['SetEnvVariable'](arg1, arg2, arg3, arg4);
+}
+
+export function SetLocalPath(arg1, arg2) {
+  return window['go']['main']['App']['SetLocalPath'](arg1, arg2);
 }
 
 export function StartGoogleLogin() {

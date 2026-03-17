@@ -4,6 +4,8 @@ import {main} from '../models';
 
 export function AddKnowledge(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string):Promise<main.KnowledgeEntry>;
 
+export function AddPort(arg1:string,arg2:number,arg3:string,arg4:string):Promise<main.Project>;
+
 export function AutoRepair(arg1:string):Promise<main.ServiceStatus>;
 
 export function CheckGoogleAuth():Promise<main.GoogleAuthStatus>;
@@ -12,15 +14,25 @@ export function CheckHandshake():Promise<main.HandshakeStatus>;
 
 export function CheckHealth():Promise<main.HealthReport>;
 
+export function CheckLocalRepo(arg1:string):Promise<main.ProjectLocalStatus>;
+
+export function CheckPortConflicts(arg1:number):Promise<Array<string>>;
+
+export function CheckPortInUse(arg1:number):Promise<boolean>;
+
 export function ClaimTask(arg1:string,arg2:string):Promise<main.Task>;
 
 export function ClearChatHistory(arg1:string):Promise<void>;
+
+export function CloneRepository(arg1:string):Promise<string>;
 
 export function CreateBusinessUnit(arg1:main.BusinessUnit):Promise<main.BusinessUnit>;
 
 export function CreateChatSession(arg1:string,arg2:string):Promise<main.ChatSessionInfo>;
 
 export function CreateClient(arg1:main.Client):Promise<main.Client>;
+
+export function CreateEnvFromExample(arg1:string,arg2:string):Promise<void>;
 
 export function CreateEvent(arg1:string,arg2:string,arg3:string,arg4:string):Promise<main.CreateEventResult>;
 
@@ -42,6 +54,10 @@ export function DeleteTask(arg1:string):Promise<void>;
 
 export function GetActivityForEntity(arg1:string,arg2:string):Promise<Array<main.ActivityLogEntry>>;
 
+export function GetAllProjects():Promise<Array<main.Project>>;
+
+export function GetAllUsedPorts():Promise<Array<main.PortWithProject>>;
+
 export function GetAppInfo():Promise<main.AppInfo>;
 
 export function GetBusinessUnits(arg1:string):Promise<Array<main.BusinessUnit>>;
@@ -59,6 +75,10 @@ export function GetClients():Promise<Array<main.Client>>;
 export function GetEmail(arg1:string):Promise<main.EmailDetailResult>;
 
 export function GetEmails(arg1:number):Promise<main.EmailResult>;
+
+export function GetEnvFileContent(arg1:string,arg2:string):Promise<string>;
+
+export function GetEnvVariables(arg1:string,arg2:string):Promise<Array<main.EnvVar>>;
 
 export function GetGoogleUserInfo():Promise<main.GoogleUserInfo>;
 
@@ -92,11 +112,25 @@ export function LogoutGoogle():Promise<boolean>;
 
 export function MarkAsRead(arg1:string):Promise<main.SendEmailResult>;
 
+export function OpenInTerminal(arg1:string):Promise<void>;
+
 export function PerformHandshake():Promise<string>;
+
+export function PullLatest(arg1:string):Promise<string>;
+
+export function RemovePort(arg1:string,arg2:number):Promise<main.Project>;
+
+export function SaveEnvFileContent(arg1:string,arg2:string,arg3:string):Promise<void>;
+
+export function ScanEnvFiles(arg1:string):Promise<Array<main.EnvFileStatus>>;
 
 export function SearchKnowledge(arg1:string,arg2:number):Promise<Array<main.KnowledgeSearchResult>>;
 
 export function SendEmail(arg1:string,arg2:string,arg3:string):Promise<main.SendEmailResult>;
+
+export function SetEnvVariable(arg1:string,arg2:string,arg3:string,arg4:string):Promise<void>;
+
+export function SetLocalPath(arg1:string,arg2:string):Promise<void>;
 
 export function StartGoogleLogin():Promise<main.GoogleAuthStatus>;
 

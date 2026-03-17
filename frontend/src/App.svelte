@@ -12,6 +12,7 @@
   import Settings from './pages/Settings.svelte'
   import Chat from './pages/Chat.svelte'
   import Clients from './pages/Clients.svelte'
+  import Projects from './pages/Projects.svelte'
   import Project from './pages/Project.svelte'
 
   let showHealth = true
@@ -23,6 +24,7 @@
     '/': Dashboard,
     '/chat': Chat,
     '/clients': Clients,
+    '/projects': Projects,
     '/project/:id': wrap({ component: Project }),
     '/ideas': Ideas,
     '/email': Email,
