@@ -15,6 +15,7 @@ import (
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // --- Local Project Storage (machine-specific, NOT in MongoDB) ---
@@ -563,7 +564,144 @@ func sanitizeDirName(name string) string {
 	return safe
 }
 
-// GetAllProjects returns all projects (no filter)
+// GetAllProjects returns only top-level projects (parentId is empty)
 func (a *App) GetAllProjects() ([]Project, error) {
-	return a.GetProjects("", "")
+	db, err := getDB()
+	if err != nil {
+		return nil, fmt.Errorf("db error: %v", err)
+	}
+
+	filter := bson.M{
+		"$or": []bson.M{
+			{"parentId": ""},
+			{"parentId": bson.M{"$exists": false}},
+		},
+	}
+
+	cursor, err := db.Collection("projects").Find(context.Background(), filter, options.Find().SetSort(bson.D{{Key: "name", Value: 1}}))
+	if err != nil {
+		return nil, fmt.Errorf("find error: %v", err)
+	}
+	defer cursor.Close(context.Background())
+
+	var projects []Project
+	if err := cursor.All(context.Background(), &projects); err != nil {
+		return nil, fmt.Errorf("decode error: %v", err)
+	}
+	if projects == nil {
+		projects = []Project{}
+	}
+	return projects, nil
+}
+
+// --- Sub-project Management ---
+
+// GetSubProjects returns all sub-projects of a parent group
+func (a *App) GetSubProjects(parentId string) ([]Project, error) {
+	db, err := getDB()
+	if err != nil {
+		return nil, fmt.Errorf("db error: %v", err)
+	}
+
+	cursor, err := db.Collection("projects").Find(context.Background(), bson.M{"parentId": parentId}, options.Find().SetSort(bson.D{{Key: "name", Value: 1}}))
+	if err != nil {
+		return nil, fmt.Errorf("find error: %v", err)
+	}
+	defer cursor.Close(context.Background())
+
+	var projects []Project
+	if err := cursor.All(context.Background(), &projects); err != nil {
+		return nil, fmt.Errorf("decode error: %v", err)
+	}
+	if projects == nil {
+		projects = []Project{}
+	}
+	return projects, nil
+}
+
+// GetSubProjectCount returns the number of sub-projects for a parent
+func (a *App) GetSubProjectCount(parentId string) (int, error) {
+	db, err := getDB()
+	if err != nil {
+		return 0, fmt.Errorf("db error: %v", err)
+	}
+	count, err := db.Collection("projects").CountDocuments(context.Background(), bson.M{"parentId": parentId})
+	if err != nil {
+		return 0, fmt.Errorf("count error: %v", err)
+	}
+	return int(count), nil
+}
+
+// CreateSubProject creates a sub-project under a parent group
+func (a *App) CreateSubProject(parentId string, name string, description string, repoUrl string, stack string) (Project, error) {
+	// Verify parent exists and is a group
+	parent, err := a.GetProject(parentId)
+	if err != nil {
+		return Project{}, fmt.Errorf("parent project not found: %v", err)
+	}
+
+	// Auto-mark parent as group if not already
+	if !parent.IsGroup {
+		parent.IsGroup = true
+		if _, err := a.UpdateProject(parent); err != nil {
+			return Project{}, fmt.Errorf("failed to mark parent as group: %v", err)
+		}
+	}
+
+	sub := Project{
+		ParentID:    parentId,
+		ClientID:    parent.ClientID,
+		BusinessUnitID: parent.BusinessUnitID,
+		Name:        name,
+		Description: description,
+		RepoURL:     repoUrl,
+		Stack:       stack,
+		Status:      "active",
+		Priority:    parent.Priority,
+	}
+
+	created, err := a.CreateProject(sub)
+	if err != nil {
+		return Project{}, err
+	}
+
+	go a.LogActivity("created", "project", created.ID, "Created sub-project: "+name+" under "+parent.Name, parentId)
+	return created, nil
+}
+
+// DeleteSubProject deletes a sub-project and its tasks
+func (a *App) DeleteSubProject(subProjectId string) error {
+	sub, err := a.GetProject(subProjectId)
+	if err != nil {
+		return fmt.Errorf("sub-project not found: %v", err)
+	}
+	parentId := sub.ParentID
+
+	if err := a.DeleteProject(subProjectId); err != nil {
+		return err
+	}
+
+	go a.LogActivity("deleted", "project", subProjectId, "Deleted sub-project: "+sub.Name, parentId)
+
+	// Check if parent still has sub-projects; if not, unmark as group
+	if parentId != "" {
+		count, _ := a.GetSubProjectCount(parentId)
+		if count == 0 {
+			if parent, err := a.GetProject(parentId); err == nil {
+				parent.IsGroup = false
+				a.UpdateProject(parent)
+			}
+		}
+	}
+	return nil
+}
+
+// OpenInFinder opens the project's local path in Finder
+func (a *App) OpenInFinder(projectId string) error {
+	local := getLocalProjectData(projectId)
+	if local.LocalPath == "" {
+		return fmt.Errorf("no local path set")
+	}
+	cmd := exec.Command("open", local.LocalPath)
+	return cmd.Start()
 }

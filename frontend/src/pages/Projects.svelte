@@ -5,6 +5,7 @@
 
   let projects = []
   let clients = {}
+  let subProjectCounts = {}
   let loading = true
   let search = ''
   let statusFilter = 'all'
@@ -12,7 +13,7 @@
   // Modal state
   let modal = false
   let modalMode = 'create'
-  let editingProject = { clientId: '', businessUnitId: '', name: '', description: '', status: 'active', stack: '', repoUrl: '', priority: 'medium', startDate: '', dueDate: '' }
+  let editingProject = { clientId: '', businessUnitId: '', name: '', description: '', status: 'active', stack: '', repoUrl: '', priority: 'medium', startDate: '', dueDate: '', isGroup: false }
   let allClients = []
   let allBusinessUnits = []
   let deleteConfirm = null
@@ -31,6 +32,14 @@
       for (const c of cl) {
         clients[c.id] = c.name
       }
+      // Load sub-project counts for groups
+      const counts = {}
+      for (const p of projects) {
+        if (p.isGroup) {
+          try { counts[p.id] = await wails.GetSubProjectCount(p.id) } catch { counts[p.id] = 0 }
+        }
+      }
+      subProjectCounts = counts
     } catch (e) {
       console.error('Failed to load projects:', e)
       projects = []
@@ -47,7 +56,7 @@
   async function openCreateProject() {
     modal = true
     modalMode = 'create'
-    editingProject = { clientId: '', businessUnitId: '', name: '', description: '', status: 'active', stack: '', repoUrl: '', priority: 'medium', startDate: '', dueDate: '' }
+    editingProject = { clientId: '', businessUnitId: '', name: '', description: '', status: 'active', stack: '', repoUrl: '', priority: 'medium', startDate: '', dueDate: '', isGroup: false }
     try { allClients = await wails.GetClients() || [] } catch { allClients = [] }
     allBusinessUnits = []
   }
@@ -155,8 +164,12 @@
       {#each filtered as project (project.id)}
         <div class="project-card" on:click={() => openProject(project.id)}>
           <div class="project-top">
+            <span class="project-type-icon">{project.isGroup ? '&#128193;' : '&#9776;'}</span>
             <span class="project-name">{project.name}</span>
             <div class="project-badges">
+              {#if project.isGroup && subProjectCounts[project.id]}
+                <span class="badge sub-count-badge">{subProjectCounts[project.id]} sub</span>
+              {/if}
               <span class="badge" style="background: {statusColor(project.status)}20; color: {statusColor(project.status)}">{project.status}</span>
               <span class="badge" style="background: {priorityColor(project.priority)}20; color: {priorityColor(project.priority)}">{project.priority}</span>
             </div>
@@ -246,6 +259,12 @@
           <label>Due Date</label>
           <input type="date" bind:value={editingProject.dueDate} />
         </div>
+      </div>
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input type="checkbox" bind:checked={editingProject.isGroup} />
+          <span>This is a project group (contains sub-projects)</span>
+        </label>
       </div>
       <div class="modal-actions">
         <button class="btn-secondary" on:click={() => modal = false}>Cancel</button>
@@ -410,10 +429,21 @@
     margin-bottom: 6px;
   }
 
+  .project-type-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
   .project-name {
     font-weight: 600;
     font-size: 14px;
     color: var(--text-primary);
+    flex: 1;
+  }
+
+  .sub-count-badge {
+    background: rgba(139, 92, 246, 0.15);
+    color: #8b5cf6;
   }
 
   .project-badges {
@@ -627,8 +657,18 @@
     margin-top: 16px;
   }
 
-  /* Unassigned section removed */
-  .unassigned-section {
-    margin-top: 24px;
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .checkbox-label input[type="checkbox"] {
+    width: auto;
+    accent-color: var(--accent);
+    cursor: pointer;
   }
 </style>

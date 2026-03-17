@@ -71,6 +71,8 @@ type Project struct {
 	ID             string      `json:"id" bson:"_id,omitempty"`
 	ClientID       string      `json:"clientId" bson:"clientId"`
 	BusinessUnitID string      `json:"businessUnitId" bson:"businessUnitId"`
+	ParentID       string      `json:"parentId" bson:"parentId"`
+	IsGroup        bool        `json:"isGroup" bson:"isGroup"`
 	Name           string      `json:"name" bson:"name"`
 	Description    string      `json:"description" bson:"description"`
 	Status         string      `json:"status" bson:"status"`

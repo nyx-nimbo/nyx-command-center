@@ -9,6 +9,7 @@
   let project = null
   let client = null
   let businessUnit = null
+  let parentProject = null
   let tasks = []
   let stats = null
   let loading = true
@@ -17,15 +18,33 @@
   let envFiles = []
   let allUsedPorts = []
 
-  // Tabs
+  // Sub-projects
+  let subProjects = []
+  let subProjectModal = false
+  let newSubProject = { name: '', description: '', repoUrl: '', stack: '' }
+
+  // Local path
+  let localPathInput = ''
+  let settingLocalPath = false
+
+  // Tabs - built dynamically based on project type
   let activeTab = 'tasks'
-  const tabs = [
-    { key: 'tasks', label: 'Tasks' },
-    { key: 'repository', label: 'Repository' },
-    { key: 'ports', label: 'Ports' },
-    { key: 'env', label: 'Env Files' },
-    { key: 'activity', label: 'Activity' },
-  ]
+  $: tabs = project?.isGroup
+    ? [
+        { key: 'subprojects', label: 'Sub-projects' },
+        { key: 'tasks', label: 'Tasks' },
+        { key: 'repository', label: 'Repository' },
+        { key: 'ports', label: 'Ports' },
+        { key: 'env', label: 'Env Files' },
+        { key: 'activity', label: 'Activity' },
+      ]
+    : [
+        { key: 'tasks', label: 'Tasks' },
+        { key: 'repository', label: 'Repository' },
+        { key: 'ports', label: 'Ports' },
+        { key: 'env', label: 'Env Files' },
+        { key: 'activity', label: 'Activity' },
+      ]
 
   // Task modal
   let taskModal = false
@@ -89,6 +108,16 @@
         client = null
         businessUnit = null
       }
+      // Load parent for breadcrumbs
+      if (project.parentId) {
+        try { parentProject = await wails.GetProject(project.parentId) } catch(e) { parentProject = null }
+      } else {
+        parentProject = null
+      }
+      if (project.isGroup) {
+        await loadSubProjects()
+        if (activeTab === 'tasks') activeTab = 'subprojects'
+      }
       await loadTasks()
       await loadStats()
     } catch (e) {
@@ -96,6 +125,52 @@
     } finally {
       loading = false
     }
+  }
+
+  async function loadSubProjects() {
+    try { subProjects = await wails.GetSubProjects(params.id) || [] } catch (e) { subProjects = [] }
+  }
+
+  async function openCreateSubProject() {
+    subProjectModal = true
+    newSubProject = { name: '', description: '', repoUrl: '', stack: '' }
+  }
+
+  async function saveSubProject() {
+    if (!newSubProject.name) return
+    try {
+      await wails.CreateSubProject(params.id, newSubProject.name, newSubProject.description, newSubProject.repoUrl, newSubProject.stack)
+      subProjectModal = false
+      await loadSubProjects()
+      await loadProject()
+    } catch (e) { console.error('Failed to create sub-project:', e) }
+  }
+
+  async function deleteSubProject(subId) {
+    try {
+      await wails.DeleteSubProject(subId)
+      await loadSubProjects()
+      await loadProject()
+    } catch (e) { console.error('Failed to delete sub-project:', e) }
+  }
+
+  function getSubProjectLocalStatus(subId) {
+    return wails.CheckLocalRepo(subId)
+  }
+
+  async function setLocalPathManual() {
+    if (!localPathInput.trim()) return
+    settingLocalPath = true
+    try {
+      await wails.SetLocalPath(params.id, localPathInput.trim())
+      localPathInput = ''
+      await loadRepoStatus()
+    } catch (e) { alert('Error: ' + e) }
+    finally { settingLocalPath = false }
+  }
+
+  async function openInFinder() {
+    try { await wails.OpenInFinder(params.id) } catch (e) { console.error(e) }
   }
 
   async function loadTasks() {
@@ -336,7 +411,7 @@
     try { projectActivity = await wails.GetActivityForEntity('project', params.id) || [] } catch (e) { projectActivity = [] }
   }
 
-  function goBack() { push('/clients') }
+  function goBack() { push('/projects') }
 
   let unsubActivity = null
   let unsubCloning = null
@@ -380,7 +455,15 @@
     <!-- Project Header -->
     <div class="project-header">
       <div class="header-top">
-        <button class="btn-back" on:click={goBack}>← Clients</button>
+        <div class="breadcrumb">
+          <button class="btn-back" on:click={() => push('/projects')}>Projects</button>
+          {#if parentProject}
+            <span class="breadcrumb-sep">/</span>
+            <button class="btn-back" on:click={() => push(`/project/${parentProject.id}`)}>{parentProject.name}</button>
+          {/if}
+          <span class="breadcrumb-sep">/</span>
+          <span class="breadcrumb-current">{project.name}</span>
+        </div>
         <div class="header-right-actions">
           <button class="btn-edit" on:click={openEditProject}>Edit</button>
           <div class="header-badges">
@@ -423,6 +506,9 @@
       {#each tabs as tab}
         <button class="tab-btn" class:active={activeTab === tab.key} on:click={() => activeTab = tab.key}>
           {tab.label}
+          {#if tab.key === 'subprojects' && subProjects.length}
+            <span class="tab-count">{subProjects.length}</span>
+          {/if}
           {#if tab.key === 'ports' && project.ports?.length}
             <span class="tab-count">{project.ports.length}</span>
           {/if}
@@ -435,8 +521,43 @@
 
     <!-- Tab Content -->
     <div class="tab-content">
+      <!-- SUB-PROJECTS TAB -->
+      {#if activeTab === 'subprojects'}
+        <div class="section-content">
+          <div class="section-top-bar">
+            <span class="section-label">Sub-projects</span>
+            <button class="btn-small" on:click={openCreateSubProject}>+ Add Sub-project</button>
+          </div>
+          {#if subProjects.length === 0}
+            <div class="empty-section">
+              <p>No sub-projects yet. Add one to get started.</p>
+              <button class="btn-primary" on:click={openCreateSubProject}>Add Sub-project</button>
+            </div>
+          {:else}
+            <div class="sub-projects-grid">
+              {#each subProjects as sub (sub.id)}
+                <div class="sub-project-card" on:click={() => push(`/project/${sub.id}`)}>
+                  <div class="sub-top">
+                    <span class="sub-icon">&#9776;</span>
+                    <span class="sub-name">{sub.name}</span>
+                    <div class="sub-badges">
+                      <span class="badge" style="background: {statusColor(sub.status)}20; color: {statusColor(sub.status)}">{sub.status}</span>
+                    </div>
+                  </div>
+                  {#if sub.description}<div class="sub-desc">{sub.description}</div>{/if}
+                  {#if sub.repoUrl}<div class="sub-repo mono">{sub.repoUrl}</div>{/if}
+                  {#if sub.stack}<div class="sub-stack">{sub.stack}</div>{/if}
+                  <div class="sub-actions" on:click|stopPropagation>
+                    <button class="btn-icon btn-danger" on:click={() => { deleteConfirm = sub }} title="Remove">✕</button>
+                  </div>
+                </div>
+              {/each}
+            </div>
+          {/if}
+        </div>
+
       <!-- TASKS TAB -->
-      {#if activeTab === 'tasks'}
+      {:else if activeTab === 'tasks'}
         <div class="kanban">
           {#each columns as col (col.key)}
             <div class="kanban-column">
@@ -502,11 +623,20 @@
 
             {#if repoStatus?.isCloned}
               <div class="repo-info">
-                <div class="info-grid">
+                <div class="local-path-section">
                   <div class="info-item">
                     <span class="info-label">Local Path</span>
-                    <span class="info-value mono">{repoStatus.localPath}</span>
+                    <div class="local-path-row">
+                      <span class="local-path-icon">&#128193;</span>
+                      <span class="info-value mono">{repoStatus.localPath}</span>
+                    </div>
                   </div>
+                  <div class="local-path-actions">
+                    <button class="btn-secondary btn-compact" on:click={openTerminal}>Open in Terminal</button>
+                    <button class="btn-secondary btn-compact" on:click={openInFinder}>Open in Finder</button>
+                  </div>
+                </div>
+                <div class="info-grid">
                   <div class="info-item">
                     <span class="info-label">Branch</span>
                     <span class="info-value"><span class="branch-badge">{repoStatus.currentBranch}</span></span>
@@ -530,7 +660,6 @@
                   <button class="btn-secondary" on:click={pullLatest} disabled={pulling}>
                     {pulling ? 'Pulling...' : 'Pull Latest'}
                   </button>
-                  <button class="btn-secondary" on:click={openTerminal}>Open in Terminal</button>
                 </div>
                 {#if pullResult}
                   <pre class="pull-output">{pullResult}</pre>
@@ -543,7 +672,6 @@
                   <button class="btn-primary" on:click={cloneRepo} disabled={cloning}>
                     {cloning ? 'Cloning...' : 'Clone Repository'}
                   </button>
-                  <button class="btn-secondary" on:click={setManualPath}>Set Local Path</button>
                 </div>
                 {#if cloning}
                   <div class="clone-progress">
@@ -554,6 +682,15 @@
                 {#if cloneError}
                   <div class="error-msg">{cloneError}</div>
                 {/if}
+                <div class="manual-path-section">
+                  <span class="info-label">Or set path manually</span>
+                  <div class="manual-path-row">
+                    <input class="path-input" type="text" bind:value={localPathInput} placeholder="/Users/you/Projects/my-project" />
+                    <button class="btn-secondary btn-compact" on:click={setLocalPathManual} disabled={settingLocalPath || !localPathInput.trim()}>
+                      {settingLocalPath ? 'Setting...' : 'Set Path'}
+                    </button>
+                  </div>
+                </div>
               </div>
             {/if}
           {/if}
@@ -760,12 +897,21 @@
 {#if deleteConfirm}
   <div class="modal-overlay" on:click={() => deleteConfirm = null}>
     <div class="modal modal-small" on:click|stopPropagation>
-      <h2>Delete Task</h2>
-      <p>Delete <strong>{deleteConfirm.title}</strong>?</p>
-      <div class="modal-actions">
-        <button class="btn-secondary" on:click={() => deleteConfirm = null}>Cancel</button>
-        <button class="btn-danger-solid" on:click={deleteTask}>Delete</button>
-      </div>
+      {#if deleteConfirm.parentId !== undefined && deleteConfirm.parentId !== null}
+        <h2>Delete Sub-project</h2>
+        <p>Delete <strong>{deleteConfirm.name}</strong>? This will also delete its tasks.</p>
+        <div class="modal-actions">
+          <button class="btn-secondary" on:click={() => deleteConfirm = null}>Cancel</button>
+          <button class="btn-danger-solid" on:click={() => { deleteSubProject(deleteConfirm.id); deleteConfirm = null }}>Delete</button>
+        </div>
+      {:else}
+        <h2>Delete Task</h2>
+        <p>Delete <strong>{deleteConfirm.title}</strong>?</p>
+        <div class="modal-actions">
+          <button class="btn-secondary" on:click={() => deleteConfirm = null}>Cancel</button>
+          <button class="btn-danger-solid" on:click={deleteTask}>Delete</button>
+        </div>
+      {/if}
     </div>
   </div>
 {/if}
@@ -882,6 +1028,35 @@
   </div>
 {/if}
 
+<!-- Sub-project Modal -->
+{#if subProjectModal}
+  <div class="modal-overlay" on:click={() => subProjectModal = false}>
+    <div class="modal" on:click|stopPropagation>
+      <h2>Add Sub-project</h2>
+      <div class="form-group">
+        <label>Name *</label>
+        <input type="text" bind:value={newSubProject.name} placeholder="e.g. worklife-backend" />
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea bind:value={newSubProject.description} placeholder="Sub-project description..." rows="2"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Repository URL</label>
+        <input type="text" bind:value={newSubProject.repoUrl} placeholder="https://github.com/..." />
+      </div>
+      <div class="form-group">
+        <label>Stack</label>
+        <input type="text" bind:value={newSubProject.stack} placeholder="e.g. Node.js, Express" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" on:click={() => subProjectModal = false}>Cancel</button>
+        <button class="btn-primary" on:click={saveSubProject} disabled={!newSubProject.name}>Create</button>
+      </div>
+    </div>
+  </div>
+{/if}
+
 <style>
   .project-page {
     height: 100%;
@@ -914,6 +1089,23 @@
     display: flex;
     align-items: center;
     gap: 10px;
+  }
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .breadcrumb-sep {
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+
+  .breadcrumb-current {
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 500;
   }
 
   .btn-back {
@@ -1692,4 +1884,129 @@
     min-width: 60px;
     padding: 2px;
   }
+
+  /* Sub-projects */
+  .sub-projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 10px;
+  }
+
+  .sub-project-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+  }
+  .sub-project-card:hover { border-color: var(--accent); background: var(--bg-card-hover); }
+
+  .sub-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .sub-icon {
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+
+  .sub-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-primary);
+    flex: 1;
+  }
+
+  .sub-badges { display: flex; gap: 4px; flex-shrink: 0; }
+
+  .sub-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sub-repo {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sub-stack {
+    font-size: 11px;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  .sub-actions {
+    display: flex;
+    gap: 4px;
+    justify-content: flex-end;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+  }
+  .sub-project-card:hover .sub-actions { opacity: 1; }
+
+  /* Local path */
+  .local-path-section {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .local-path-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .local-path-icon { font-size: 16px; }
+
+  .local-path-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .btn-compact {
+    padding: 5px 12px;
+    font-size: 12px;
+  }
+
+  .manual-path-section {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  .manual-path-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+  }
+
+  .path-input {
+    flex: 1;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    padding: 8px 10px;
+    font-size: 13px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    outline: none;
+    transition: border-color var(--transition-fast);
+  }
+  .path-input:focus { border-color: var(--accent); }
+  .path-input::placeholder { color: var(--text-muted); }
 </style>
