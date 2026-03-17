@@ -18,6 +18,15 @@
   let allBusinessUnits = []
   let deleteConfirm = null
 
+  // Move to group
+  let moveToGroupModal = false
+  let moveProjectTarget = null
+  let allGroups = []
+  let moveLoading = false
+
+  // Convert to group confirm
+  let convertConfirm = null
+
   async function loadProjects() {
     try {
       loading = true
@@ -106,6 +115,41 @@
     deleteConfirm = null
   }
 
+  async function openMoveToGroup(project) {
+    moveProjectTarget = project
+    try { allGroups = await wails.GetAllGroups() || [] } catch { allGroups = [] }
+    allGroups = allGroups.filter(g => g.id !== project.id)
+    moveToGroupModal = true
+  }
+
+  async function executeMoveToGroup(groupId) {
+    if (!moveProjectTarget) return
+    moveLoading = true
+    try {
+      await wails.MoveProjectToGroup(moveProjectTarget.id, groupId)
+      moveToGroupModal = false
+      moveProjectTarget = null
+      await loadProjects()
+    } catch (e) {
+      console.error('Move failed:', e)
+      alert('Error: ' + e)
+    } finally {
+      moveLoading = false
+    }
+  }
+
+  async function executeConvertToGroup() {
+    if (!convertConfirm) return
+    try {
+      await wails.ConvertToGroup(convertConfirm.id)
+      convertConfirm = null
+      await loadProjects()
+    } catch (e) {
+      console.error('Convert failed:', e)
+      alert('Error: ' + e)
+    }
+  }
+
   function statusColor(status) {
     const colors = { active: '#22c55e', paused: '#f59e0b', completed: '#3b82f6', archived: '#71717a' }
     return colors[status] || '#71717a'
@@ -179,8 +223,15 @@
           {/if}
           {#if project.description}<div class="project-desc">{project.description}</div>{/if}
           {#if project.stack}<div class="project-stack">{project.stack}</div>{/if}
+          {#if project.isGroup}
+            <div class="group-drop-hint">Drop projects here via "Move to..."</div>
+          {/if}
           <div class="project-actions-row" on:click|stopPropagation>
             <button class="btn-icon" on:click={() => openEditProject(project)} title="Edit">✏️</button>
+            <button class="btn-action-text" on:click={() => openMoveToGroup(project)} title="Move to Group">Move to...</button>
+            {#if !project.isGroup}
+              <button class="btn-action-text" on:click={() => { convertConfirm = project }} title="Convert to Group">To Group</button>
+            {/if}
             <button class="btn-icon btn-danger" on:click={() => { deleteConfirm = project }} title="Delete">✕</button>
           </div>
         </div>
@@ -283,6 +334,50 @@
       <div class="modal-actions">
         <button class="btn-secondary" on:click={() => deleteConfirm = null}>Cancel</button>
         <button class="btn-danger-solid" on:click={executeDelete}>Delete</button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Convert to Group Confirm -->
+{#if convertConfirm}
+  <div class="modal-overlay" on:click={() => convertConfirm = null}>
+    <div class="modal modal-small" on:click|stopPropagation>
+      <h2>Convert to Group</h2>
+      <p>Convert <strong>{convertConfirm.name}</strong> into a project group? All existing data will be preserved.</p>
+      <div class="modal-actions">
+        <button class="btn-secondary" on:click={() => convertConfirm = null}>Cancel</button>
+        <button class="btn-primary" on:click={executeConvertToGroup}>Convert</button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Move to Group Modal -->
+{#if moveToGroupModal}
+  <div class="modal-overlay" on:click={() => { moveToGroupModal = false; moveProjectTarget = null }}>
+    <div class="modal" on:click|stopPropagation>
+      <h2>Move to Group</h2>
+      <p>Select a group to move <strong>{moveProjectTarget?.name}</strong> into. All data will be preserved.</p>
+      {#if allGroups.length === 0}
+        <div class="empty-state" style="padding: 24px 0;">
+          <p>No groups available. Create a group first or convert a project to a group.</p>
+        </div>
+      {:else}
+        <div class="group-pick-list">
+          {#each allGroups as g (g.id)}
+            <button class="group-pick-item" on:click={() => executeMoveToGroup(g.id)} disabled={moveLoading}>
+              <span class="group-pick-icon">📁</span>
+              <div class="group-pick-info">
+                <span class="group-pick-name">{g.name}</span>
+                {#if g.description}<span class="group-pick-desc">{g.description}</span>{/if}
+              </div>
+            </button>
+          {/each}
+        </div>
+      {/if}
+      <div class="modal-actions">
+        <button class="btn-secondary" on:click={() => { moveToGroupModal = false; moveProjectTarget = null }}>Cancel</button>
       </div>
     </div>
   </div>
@@ -670,5 +765,90 @@
     width: auto;
     accent-color: var(--accent);
     cursor: pointer;
+  }
+
+  /* Action text buttons on cards */
+  .btn-action-text {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    transition: all var(--transition-fast);
+  }
+  .btn-action-text:hover {
+    background: var(--accent-subtle);
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  /* Group drop hint */
+  .group-drop-hint {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-style: italic;
+    margin-top: 4px;
+    padding: 4px 8px;
+    background: rgba(139, 92, 246, 0.08);
+    border: 1px dashed rgba(139, 92, 246, 0.25);
+    border-radius: 4px;
+    text-align: center;
+  }
+
+  /* Group picker list */
+  .group-pick-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 8px;
+  }
+
+  .group-pick-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    text-align: left;
+    color: var(--text-primary);
+  }
+  .group-pick-item:hover {
+    border-color: var(--accent);
+    background: var(--bg-card-hover);
+  }
+  .group-pick-item:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .group-pick-icon { font-size: 18px; flex-shrink: 0; }
+
+  .group-pick-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: hidden;
+  }
+
+  .group-pick-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .group-pick-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 </style>

@@ -77,6 +77,13 @@
   let allClients = []
   let allBusinessUnits = []
 
+  // Actions menu & move-to-group
+  let actionsMenuOpen = false
+  let moveToGroupModal = false
+  let allGroups = []
+  let actionConfirm = null // { type: 'convertToGroup' | 'makeStandalone', project }
+  let actionLoading = false
+
   const columns = [
     { key: 'todo', label: 'To Do', color: '#71717a' },
     { key: 'in_progress', label: 'In Progress', color: '#3b82f6' },
@@ -367,6 +374,61 @@
     envVars = []
   }
 
+  // --- Project Actions (convert, move, standalone) ---
+  function toggleActionsMenu() { actionsMenuOpen = !actionsMenuOpen }
+  function closeActionsMenu() { actionsMenuOpen = false }
+
+  async function confirmConvertToGroup() {
+    actionConfirm = { type: 'convertToGroup' }
+    actionsMenuOpen = false
+  }
+
+  async function confirmMakeStandalone() {
+    actionConfirm = { type: 'makeStandalone' }
+    actionsMenuOpen = false
+  }
+
+  async function executeAction() {
+    if (!actionConfirm) return
+    actionLoading = true
+    try {
+      if (actionConfirm.type === 'convertToGroup') {
+        await wails.ConvertToGroup(params.id)
+      } else if (actionConfirm.type === 'makeStandalone') {
+        await wails.MoveProjectToStandalone(params.id)
+      }
+      actionConfirm = null
+      await loadProject()
+    } catch (e) {
+      console.error('Action failed:', e)
+      alert('Error: ' + e)
+    } finally {
+      actionLoading = false
+    }
+  }
+
+  async function openMoveToGroup() {
+    actionsMenuOpen = false
+    try { allGroups = await wails.GetAllGroups() || [] } catch { allGroups = [] }
+    // Filter out current project and current parent from group list
+    allGroups = allGroups.filter(g => g.id !== params.id && g.id !== project?.parentId)
+    moveToGroupModal = true
+  }
+
+  async function moveToGroup(groupId) {
+    actionLoading = true
+    try {
+      await wails.MoveProjectToGroup(params.id, groupId)
+      moveToGroupModal = false
+      await loadProject()
+    } catch (e) {
+      console.error('Move failed:', e)
+      alert('Error: ' + e)
+    } finally {
+      actionLoading = false
+    }
+  }
+
   // --- Edit Project ---
   async function openEditProject() {
     editingProject = { ...project }
@@ -466,6 +528,21 @@
         </div>
         <div class="header-right-actions">
           <button class="btn-edit" on:click={openEditProject}>Edit</button>
+          <div class="actions-menu-wrap">
+            <button class="btn-edit" on:click={toggleActionsMenu} title="More actions">...</button>
+            {#if actionsMenuOpen}
+              <div class="actions-backdrop" on:click={closeActionsMenu}></div>
+              <div class="actions-dropdown">
+                {#if !project.isGroup}
+                  <button class="dropdown-item" on:click={confirmConvertToGroup}>Convert to Group</button>
+                {/if}
+                <button class="dropdown-item" on:click={openMoveToGroup}>Move to Group...</button>
+                {#if project.parentId}
+                  <button class="dropdown-item" on:click={confirmMakeStandalone}>Make Standalone</button>
+                {/if}
+              </div>
+            {/if}
+          </div>
           <div class="header-badges">
             <span class="badge" style="background: {statusColor(project.status)}20; color: {statusColor(project.status)}">{project.status}</span>
             <span class="badge" style="background: {priorityColor(project.priority)}20; color: {priorityColor(project.priority)}">{project.priority}</span>
@@ -1052,6 +1129,55 @@
       <div class="modal-actions">
         <button class="btn-secondary" on:click={() => subProjectModal = false}>Cancel</button>
         <button class="btn-primary" on:click={saveSubProject} disabled={!newSubProject.name}>Create</button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Action Confirm Dialog -->
+{#if actionConfirm}
+  <div class="modal-overlay" on:click={() => actionConfirm = null}>
+    <div class="modal modal-small" on:click|stopPropagation>
+      {#if actionConfirm.type === 'convertToGroup'}
+        <h2>Convert to Group</h2>
+        <p>Convert <strong>{project?.name}</strong> into a project group? All existing data (tasks, ports, env files) will be preserved. You'll be able to add sub-projects to it.</p>
+      {:else if actionConfirm.type === 'makeStandalone'}
+        <h2>Make Standalone</h2>
+        <p>Remove <strong>{project?.name}</strong> from its parent group and make it a top-level project? All data will be preserved.</p>
+      {/if}
+      <div class="modal-actions">
+        <button class="btn-secondary" on:click={() => actionConfirm = null}>Cancel</button>
+        <button class="btn-primary" on:click={executeAction} disabled={actionLoading}>
+          {actionLoading ? 'Working...' : 'Confirm'}
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Move to Group Modal -->
+{#if moveToGroupModal}
+  <div class="modal-overlay" on:click={() => moveToGroupModal = false}>
+    <div class="modal" on:click|stopPropagation>
+      <h2>Move to Group</h2>
+      <p>Select a group to move <strong>{project?.name}</strong> into. All data will be preserved.</p>
+      {#if allGroups.length === 0}
+        <div class="empty-section"><p>No groups available. Create a group first or convert a project to a group.</p></div>
+      {:else}
+        <div class="group-pick-list">
+          {#each allGroups as g (g.id)}
+            <button class="group-pick-item" on:click={() => moveToGroup(g.id)} disabled={actionLoading}>
+              <span class="group-pick-icon">📁</span>
+              <div class="group-pick-info">
+                <span class="group-pick-name">{g.name}</span>
+                {#if g.description}<span class="group-pick-desc">{g.description}</span>{/if}
+              </div>
+            </button>
+          {/each}
+        </div>
+      {/if}
+      <div class="modal-actions">
+        <button class="btn-secondary" on:click={() => moveToGroupModal = false}>Cancel</button>
       </div>
     </div>
   </div>
@@ -2009,4 +2135,102 @@
   }
   .path-input:focus { border-color: var(--accent); }
   .path-input::placeholder { color: var(--text-muted); }
+
+  /* Actions dropdown menu */
+  .actions-menu-wrap {
+    position: relative;
+  }
+
+  .actions-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 49;
+  }
+
+  .actions-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 4px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    min-width: 180px;
+    padding: 4px;
+    z-index: 50;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  }
+
+  .dropdown-item {
+    display: block;
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 8px 12px;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+  }
+  .dropdown-item:hover {
+    background: var(--accent-subtle);
+    color: var(--accent);
+  }
+
+  /* Group picker list */
+  .group-pick-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 8px;
+  }
+
+  .group-pick-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--bg-sidebar);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    text-align: left;
+    color: var(--text-primary);
+  }
+  .group-pick-item:hover {
+    border-color: var(--accent);
+    background: var(--bg-card-hover);
+  }
+  .group-pick-item:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .group-pick-icon { font-size: 18px; flex-shrink: 0; }
+
+  .group-pick-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: hidden;
+  }
+
+  .group-pick-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .group-pick-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 </style>

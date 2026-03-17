@@ -696,6 +696,131 @@ func (a *App) DeleteSubProject(subProjectId string) error {
 	return nil
 }
 
+// ConvertToGroup sets isGroup=true on an existing project, preserving all data
+func (a *App) ConvertToGroup(projectId string) (Project, error) {
+	project, err := a.GetProject(projectId)
+	if err != nil {
+		return Project{}, fmt.Errorf("project not found: %v", err)
+	}
+	if project.IsGroup {
+		return project, nil // already a group
+	}
+
+	project.IsGroup = true
+	updated, err := a.UpdateProject(project)
+	if err != nil {
+		return Project{}, fmt.Errorf("failed to convert to group: %v", err)
+	}
+
+	go a.LogActivity("updated", "project", projectId, "Converted project to group: "+project.Name, "")
+	return updated, nil
+}
+
+// MoveProjectToGroup moves a project into a group as a sub-project
+func (a *App) MoveProjectToGroup(projectId string, groupId string) (Project, error) {
+	if projectId == groupId {
+		return Project{}, fmt.Errorf("cannot move a project into itself")
+	}
+
+	// Verify the target group exists and is a group
+	group, err := a.GetProject(groupId)
+	if err != nil {
+		return Project{}, fmt.Errorf("group not found: %v", err)
+	}
+	if !group.IsGroup {
+		return Project{}, fmt.Errorf("target project is not a group")
+	}
+
+	project, err := a.GetProject(projectId)
+	if err != nil {
+		return Project{}, fmt.Errorf("project not found: %v", err)
+	}
+
+	// Prevent moving a group that has sub-projects (would create nesting)
+	if project.IsGroup {
+		count, _ := a.GetSubProjectCount(projectId)
+		if count > 0 {
+			return Project{}, fmt.Errorf("cannot move a group that has sub-projects")
+		}
+	}
+
+	oldParentId := project.ParentID
+	project.ParentID = groupId
+	updated, err := a.UpdateProject(project)
+	if err != nil {
+		return Project{}, fmt.Errorf("failed to move project: %v", err)
+	}
+
+	// If old parent has no more sub-projects, unmark it as group
+	if oldParentId != "" {
+		count, _ := a.GetSubProjectCount(oldParentId)
+		if count == 0 {
+			if oldParent, err := a.GetProject(oldParentId); err == nil {
+				oldParent.IsGroup = false
+				a.UpdateProject(oldParent)
+			}
+		}
+	}
+
+	go a.LogActivity("moved", "project", projectId, "Moved project '"+project.Name+"' into group '"+group.Name+"'", groupId)
+	return updated, nil
+}
+
+// MoveProjectToStandalone removes a project from its parent group, making it top-level
+func (a *App) MoveProjectToStandalone(projectId string) (Project, error) {
+	project, err := a.GetProject(projectId)
+	if err != nil {
+		return Project{}, fmt.Errorf("project not found: %v", err)
+	}
+	if project.ParentID == "" {
+		return project, nil // already standalone
+	}
+
+	oldParentId := project.ParentID
+	project.ParentID = ""
+	updated, err := a.UpdateProject(project)
+	if err != nil {
+		return Project{}, fmt.Errorf("failed to make standalone: %v", err)
+	}
+
+	// If old parent has no more sub-projects, unmark it as group
+	if oldParentId != "" {
+		count, _ := a.GetSubProjectCount(oldParentId)
+		if count == 0 {
+			if oldParent, err := a.GetProject(oldParentId); err == nil {
+				oldParent.IsGroup = false
+				a.UpdateProject(oldParent)
+			}
+		}
+	}
+
+	go a.LogActivity("moved", "project", projectId, "Made project standalone: "+project.Name, oldParentId)
+	return updated, nil
+}
+
+// GetAllGroups returns all projects that are groups (for move-to-group picker)
+func (a *App) GetAllGroups() ([]Project, error) {
+	db, err := getDB()
+	if err != nil {
+		return nil, fmt.Errorf("db error: %v", err)
+	}
+
+	cursor, err := db.Collection("projects").Find(context.Background(), bson.M{"isGroup": true}, options.Find().SetSort(bson.D{{Key: "name", Value: 1}}))
+	if err != nil {
+		return nil, fmt.Errorf("find error: %v", err)
+	}
+	defer cursor.Close(context.Background())
+
+	var groups []Project
+	if err := cursor.All(context.Background(), &groups); err != nil {
+		return nil, fmt.Errorf("decode error: %v", err)
+	}
+	if groups == nil {
+		groups = []Project{}
+	}
+	return groups, nil
+}
+
 // OpenInFinder opens the project's local path in Finder
 func (a *App) OpenInFinder(projectId string) error {
 	local := getLocalProjectData(projectId)
