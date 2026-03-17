@@ -23,7 +23,18 @@
     }
   }
 
+  // Timeout: auto-dismiss after 15s if checks never complete (stuck overlay fix)
+  let healthTimeout
+
   onMount(() => {
+    healthTimeout = setTimeout(() => {
+      if (visible && !allDone) {
+        services = services.map(s =>
+          s.status === 'checking' ? { ...s, status: 'error', message: 'Health check timed out' } : s
+        )
+      }
+    }, 15000)
+
     if (runtime) {
       runtime.EventsOn('health:report', (r) => {
         report = r
@@ -31,6 +42,7 @@
           services = r.services
         }
         if (r && r.overall === 'ok') {
+          clearTimeout(healthTimeout)
           setTimeout(() => {
             fading = true
             setTimeout(() => {
@@ -52,10 +64,20 @@
           s.name === service ? { ...s, status: 'ok', message: 'Repaired' } : s
         )
       })
+    } else {
+      // No Wails runtime (browser dev mode) — skip health check
+      setTimeout(() => {
+        fading = true
+        setTimeout(() => {
+          visible = false
+          dispatch('done', null)
+        }, 500)
+      }, 500)
     }
   })
 
   onDestroy(() => {
+    clearTimeout(healthTimeout)
     if (runtime) {
       runtime.EventsOff('health:report')
       runtime.EventsOff('health:repairing')

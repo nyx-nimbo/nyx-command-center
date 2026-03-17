@@ -1,6 +1,8 @@
 <script>
   import { push } from 'svelte-spa-router'
   import { onMount, onDestroy } from 'svelte'
+  import TicketBoard from './TicketBoard.svelte'
+  import TeamPanel from './TeamPanel.svelte'
 
   export let params = {}
 
@@ -33,6 +35,8 @@
     ? [
         { key: 'subprojects', label: 'Sub-projects' },
         { key: 'tasks', label: 'Tasks' },
+        { key: 'tickets', label: 'Tickets' },
+        { key: 'team', label: 'Team' },
         { key: 'repository', label: 'Repository' },
         { key: 'ports', label: 'Ports' },
         { key: 'env', label: 'Env Files' },
@@ -40,6 +44,8 @@
       ]
     : [
         { key: 'tasks', label: 'Tasks' },
+        { key: 'tickets', label: 'Tickets' },
+        { key: 'team', label: 'Team' },
         { key: 'repository', label: 'Repository' },
         { key: 'ports', label: 'Ports' },
         { key: 'env', label: 'Env Files' },
@@ -682,6 +688,18 @@
               </div>
             </div>
           {/each}
+        </div>
+
+      <!-- TICKETS TAB -->
+      {:else if activeTab === 'tickets'}
+        <div class="tickets-tab-content">
+          <TicketBoard projectId={params.id} />
+        </div>
+
+      <!-- TEAM TAB -->
+      {:else if activeTab === 'team'}
+        <div class="team-tab-content">
+          <TeamPanel projectId={params.id} />
         </div>
 
       <!-- REPOSITORY TAB -->
@@ -1351,6 +1369,13 @@
     flex: 1;
     overflow: auto;
     min-height: 0;
+  }
+
+  .tickets-tab-content {
+    height: 100%;
+    padding: 0 16px;
+    display: flex;
+    flex-direction: column;
   }
 
   /* Kanban */

@@ -148,5 +148,9 @@ func (a *App) PerformHandshake() (string, error) {
 		return agentResponse, fmt.Errorf("failed to save handshake: %w", err)
 	}
 
+	// Auto-register this instance as an agent
+	hostname, _ := os.Hostname()
+	a.RegisterAgent(getInstanceID(), hostname+" (Nyx)", "agent", []string{"chat", "code", "review"})
+
 	return agentResponse, nil
 }
