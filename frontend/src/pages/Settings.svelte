@@ -42,6 +42,7 @@
 
   onMount(() => {
     checkAuth()
+    checkHandshakeStatus()
     const rt = window.runtime
     if (rt) {
       rt.EventsOn('google:authenticated', () => checkAuth())
@@ -59,6 +60,44 @@
       rt.EventsOff('google:logged-out')
     }
   })
+
+  // Handshake state
+  let handshakeStatus = { connected: false, lastHandshake: '' }
+  let handshakeState = 'idle' // 'idle' | 'connecting' | 'success' | 'error'
+  let handshakeError = ''
+  let handshakeResponse = ''
+
+  async function checkHandshakeStatus() {
+    try {
+      handshakeStatus = await window['go']['main']['App']['CheckHandshake']()
+    } catch {
+      handshakeStatus = { connected: false, lastHandshake: '' }
+    }
+  }
+
+  async function forceHandshake() {
+    handshakeState = 'connecting'
+    handshakeError = ''
+    handshakeResponse = ''
+    try {
+      const result = await window['go']['main']['App']['PerformHandshake']()
+      handshakeResponse = result
+      handshakeStatus = await window['go']['main']['App']['CheckHandshake']()
+      handshakeState = 'success'
+    } catch (err) {
+      handshakeError = typeof err === 'string' ? err : err?.message || 'Unknown error'
+      handshakeState = 'error'
+    }
+  }
+
+  function formatHandshakeTime(ts) {
+    if (!ts) return 'Never'
+    try {
+      return new Date(ts).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' })
+    } catch {
+      return ts
+    }
+  }
 
   const generalItems = [
     { label: 'App Name', value: 'Nyx Command Center', type: 'text' },
@@ -141,6 +180,64 @@
             <button class="connect-btn" on:click={connectGoogle} disabled={loading}>
               {loading ? 'Connecting...' : 'Connect'}
             </button>
+          </div>
+        </div>
+      {/if}
+    </div>
+  </div>
+
+  <!-- Agent Connection -->
+  <div class="settings-section">
+    <h2 class="section-title">Agent Connection</h2>
+    <div class="section-card">
+      <div class="setting-row">
+        <div class="agent-info">
+          <label class="setting-label">OpenClaw Agent</label>
+          <span class="setting-sublabel">Handshake sends capabilities to the connected agent so it knows how to use this app.</span>
+        </div>
+        <div class="agent-status-area">
+          {#if handshakeStatus.connected}
+            <span class="status-badge connected">Connected</span>
+            <span class="last-sync">Last: {formatHandshakeTime(handshakeStatus.lastHandshake)}</span>
+          {:else}
+            <span class="status-badge disconnected">Not connected</span>
+          {/if}
+        </div>
+      </div>
+
+      <div class="setting-row agent-action-row">
+        <div class="agent-info">
+          <label class="setting-label">Force Handshake</label>
+          <span class="setting-sublabel">Use this after updating the agent capabilities or to reconnect a new OpenClaw instance.</span>
+        </div>
+        <button
+          class="handshake-btn"
+          class:connecting={handshakeState === 'connecting'}
+          class:success={handshakeState === 'success'}
+          on:click={forceHandshake}
+          disabled={handshakeState === 'connecting'}
+        >
+          {#if handshakeState === 'connecting'}
+            <span class="btn-spinner"></span> Connecting...
+          {:else if handshakeState === 'success'}
+            ✓ Connected
+          {:else}
+            🤝 Run Handshake
+          {/if}
+        </button>
+      </div>
+
+      {#if handshakeState === 'error'}
+        <div class="setting-row">
+          <span class="error-msg">⚠ {handshakeError}</span>
+        </div>
+      {/if}
+
+      {#if handshakeState === 'success' && handshakeResponse}
+        <div class="setting-row agent-response-row">
+          <div class="agent-response">
+            <span class="response-label">Agent response:</span>
+            <p class="response-text">{handshakeResponse}</p>
           </div>
         </div>
       {/if}
@@ -354,6 +451,124 @@
     background: rgba(239, 68, 68, 0.1);
   }
 
+  /* Agent connection */
+  .agent-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+  }
+
+  .setting-sublabel {
+    font-size: 11px;
+    color: var(--text-muted);
+    max-width: 380px;
+    line-height: 1.4;
+  }
+
+  .agent-status-area {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+
+  .last-sync {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .agent-action-row {
+    align-items: flex-start;
+    padding-top: 18px;
+    padding-bottom: 18px;
+  }
+
+  .handshake-btn {
+    background: var(--accent-subtle);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-sm);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 8px 18px;
+    cursor: pointer;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    transition: background var(--transition-fast), color var(--transition-fast);
+    flex-shrink: 0;
+  }
+
+  .handshake-btn:hover:not(:disabled) {
+    background: var(--accent);
+    color: white;
+  }
+
+  .handshake-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  .handshake-btn.success {
+    background: rgba(34, 197, 94, 0.1);
+    border-color: rgba(34, 197, 94, 0.4);
+    color: var(--success);
+  }
+
+  .btn-spinner {
+    width: 11px;
+    height: 11px;
+    border: 2px solid var(--accent);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .error-msg {
+    font-size: 12px;
+    color: var(--error);
+  }
+
+  .agent-response-row {
+    display: block;
+    padding: 16px 20px;
+  }
+
+  .agent-response {
+    width: 100%;
+  }
+
+  .response-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .response-text {
+    font-size: 12px;
+    color: var(--text-secondary);
+    background: var(--bg-input);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    margin: 0;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
   /* Status badges */
   .status-badge {
     font-size: 12px;
@@ -366,5 +581,11 @@
     background: rgba(34, 197, 94, 0.1);
     color: var(--success);
     border: 1px solid rgba(34, 197, 94, 0.3);
+  }
+
+  .status-badge.disconnected {
+    background: rgba(156, 163, 175, 0.1);
+    color: var(--text-muted);
+    border: 1px solid rgba(156, 163, 175, 0.2);
   }
 </style>

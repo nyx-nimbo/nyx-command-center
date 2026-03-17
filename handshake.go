@@ -52,8 +52,8 @@ func (a *App) CheckHandshake() HandshakeStatus {
 		return HandshakeStatus{Connected: false}
 	}
 
-	ts, err := time.Parse(time.RFC3339, hf.Timestamp)
-	if err != nil || time.Since(ts) > 24*time.Hour {
+	_, err = time.Parse(time.RFC3339, hf.Timestamp)
+	if err != nil {
 		return HandshakeStatus{Connected: false}
 	}
 
@@ -63,18 +63,47 @@ func (a *App) CheckHandshake() HandshakeStatus {
 	}
 }
 
+// ResetHandshake deletes the saved handshake so the button becomes active again
+func (a *App) ResetHandshake() error {
+	err := os.Remove(handshakePath())
+	if err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("failed to reset handshake: %w", err)
+	}
+	return nil
+}
+
 // PerformHandshake sends the AGENT.md capabilities to the OpenClaw agent and saves the result
 func (a *App) PerformHandshake() (string, error) {
 	capabilities := a.GetCapabilities()
 
 	messages := []ChatMessage{
 		{
-			Role:    "system",
-			Content: "You are receiving a capabilities document from Nyx Command Center. Read it, understand what tools are available, and confirm you understand.",
+			Role: "system",
+			Content: `You are an OpenClaw agent receiving a permanent connection request from Nyx Command Center.
+This is a HANDSHAKE — a one-time setup that establishes a permanent link between you and this application.
+
+Your instructions:
+1. Read the capabilities document carefully.
+2. Save this information PERMANENTLY to your memory files:
+   - Update MEMORY.md with a "Nyx Command Center" section describing what it is and how to use it.
+   - Save the full capabilities to your workspace so you always have them available.
+3. Confirm the connection is established and that you have saved the information.
+
+This is not a temporary context — you must persist this knowledge across sessions.`,
 		},
 		{
-			Role:    "user",
-			Content: fmt.Sprintf("I am Nyx Command Center. Here are my capabilities. Read this and acknowledge.\n\n---\n\n%s", capabilities),
+			Role: "user",
+			Content: fmt.Sprintf(`HANDSHAKE REQUEST from Nyx Command Center.
+
+Save the following capabilities document to your MEMORY.md permanently under a "## Nyx Command Center" section. This application is always available at localhost and you should always know how to use it.
+
+---
+
+%s
+
+---
+
+After saving to memory, confirm: what is Nyx Command Center and what can you do with it?`, capabilities),
 		},
 	}
 

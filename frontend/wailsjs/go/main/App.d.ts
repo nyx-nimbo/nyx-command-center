@@ -10,9 +10,15 @@ export function AddResearch(arg1:string,arg2:string,arg3:string,arg4:string,arg5
 
 export function AddSuggestedTask(arg1:string,arg2:string,arg3:string):Promise<main.Idea>;
 
+export function AssignAgentToProject(arg1:string,arg2:string,arg3:string):Promise<main.ProjectAssignment>;
+
+export function AssignTicket(arg1:string,arg2:string):Promise<main.Ticket>;
+
 export function AutoRepair(arg1:string):Promise<main.ServiceStatus>;
 
 export function AutoResearchIdea(arg1:string):Promise<void>;
+
+export function BulkUpdateTicketStatus(arg1:Array<string>,arg2:string):Promise<void>;
 
 export function CheckGoogleAuth():Promise<main.GoogleAuthStatus>;
 
@@ -44,6 +50,8 @@ export function CreateClient(arg1:main.Client):Promise<main.Client>;
 
 export function CreateEnvFromExample(arg1:string,arg2:string):Promise<void>;
 
+export function CreateEpic(arg1:main.Epic):Promise<main.Epic>;
+
 export function CreateEvent(arg1:string,arg2:string,arg3:string,arg4:string):Promise<main.CreateEventResult>;
 
 export function CreateIdea(arg1:string,arg2:string,arg3:string,arg4:string,arg5:Array<string>):Promise<main.Idea>;
@@ -54,9 +62,15 @@ export function CreateSubProject(arg1:string,arg2:string,arg3:string,arg4:string
 
 export function CreateTask(arg1:main.Task):Promise<main.Task>;
 
+export function CreateTicket(arg1:main.Ticket):Promise<main.Ticket>;
+
+export function DeleteAgent(arg1:string):Promise<void>;
+
 export function DeleteBusinessUnit(arg1:string):Promise<void>;
 
 export function DeleteClient(arg1:string):Promise<void>;
+
+export function DeleteEpic(arg1:string):Promise<void>;
 
 export function DeleteEvent(arg1:string):Promise<main.DeleteEventResult>;
 
@@ -70,7 +84,17 @@ export function DeleteSubProject(arg1:string):Promise<void>;
 
 export function DeleteTask(arg1:string):Promise<void>;
 
+export function DeleteTicket(arg1:string):Promise<void>;
+
+export function GenerateTickets(arg1:main.GenerateTicketsRequest):Promise<main.GenerateTicketsResult>;
+
 export function GetActivityForEntity(arg1:string,arg2:string):Promise<Array<main.ActivityLogEntry>>;
+
+export function GetAgent(arg1:string):Promise<main.Agent>;
+
+export function GetAgentProjects(arg1:string):Promise<Array<main.Project>>;
+
+export function GetAgents():Promise<Array<main.Agent>>;
 
 export function GetAllGroups():Promise<Array<main.Project>>;
 
@@ -100,6 +124,10 @@ export function GetEnvFileContent(arg1:string,arg2:string):Promise<string>;
 
 export function GetEnvVariables(arg1:string,arg2:string):Promise<Array<main.EnvVar>>;
 
+export function GetEpic(arg1:string):Promise<main.Epic>;
+
+export function GetEpicsByProject(arg1:string):Promise<Array<main.Epic>>;
+
 export function GetGoogleUserInfo():Promise<main.GoogleUserInfo>;
 
 export function GetIdea(arg1:string):Promise<main.Idea>;
@@ -109,6 +137,10 @@ export function GetIdeas(arg1:string):Promise<Array<main.Idea>>;
 export function GetInstanceId():Promise<string>;
 
 export function GetProject(arg1:string):Promise<main.Project>;
+
+export function GetProjectAssignments(arg1:string):Promise<Array<main.Agent>>;
+
+export function GetProjectAssignmentsWithRoles(arg1:string):Promise<Array<main.ProjectAssignment>>;
 
 export function GetProjectStats(arg1:string):Promise<main.ProjectStats>;
 
@@ -124,13 +156,27 @@ export function GetSyncState():Promise<main.SyncState>;
 
 export function GetTasks(arg1:string,arg2:string):Promise<Array<main.Task>>;
 
+export function GetTicket(arg1:string):Promise<main.Ticket>;
+
+export function GetTicketStats(arg1:string):Promise<main.TicketStats>;
+
+export function GetTicketsByEpic(arg1:string):Promise<Array<main.Ticket>>;
+
+export function GetTicketsByProject(arg1:string):Promise<Array<main.Ticket>>;
+
+export function GetTicketsByStatus(arg1:string,arg2:string):Promise<Array<main.Ticket>>;
+
 export function GetTodayEvents():Promise<main.CalendarResult>;
 
 export function GetUpcomingEvents(arg1:number):Promise<main.CalendarResult>;
 
 export function Greet(arg1:string):Promise<string>;
 
+export function IsAgentAssigned(arg1:string,arg2:string):Promise<boolean>;
+
 export function ListChatSessions():Promise<Array<main.ChatSessionInfo>>;
+
+export function LoadSessions():Promise<number>;
 
 export function LogActivity(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string):Promise<void>;
 
@@ -142,6 +188,8 @@ export function MoveProjectToGroup(arg1:string,arg2:string):Promise<main.Project
 
 export function MoveProjectToStandalone(arg1:string):Promise<main.Project>;
 
+export function MoveTicket(arg1:string,arg2:string):Promise<main.Ticket>;
+
 export function OpenInFinder(arg1:string):Promise<void>;
 
 export function OpenInTerminal(arg1:string):Promise<void>;
@@ -150,9 +198,17 @@ export function PerformHandshake():Promise<string>;
 
 export function PullLatest(arg1:string):Promise<string>;
 
+export function RegisterAgent(arg1:string,arg2:string,arg3:string,arg4:Array<string>):Promise<main.Agent>;
+
 export function RemovePort(arg1:string,arg2:number):Promise<main.Project>;
 
+export function ReorderTicket(arg1:string,arg2:number):Promise<void>;
+
+export function ResetHandshake():Promise<void>;
+
 export function SaveEnvFileContent(arg1:string,arg2:string,arg3:string):Promise<void>;
+
+export function SaveSession(arg1:string):Promise<void>;
 
 export function ScanEnvFiles(arg1:string):Promise<Array<main.EnvFileStatus>>;
 
@@ -178,9 +234,15 @@ export function StreamChatWithImages(arg1:string,arg2:string,arg3:Array<string>)
 
 export function SwitchSession(arg1:string):Promise<Array<main.ChatMessage>>;
 
+export function UnassignAgentFromProject(arg1:string,arg2:string):Promise<void>;
+
+export function UpdateAgentStatus(arg1:string,arg2:string):Promise<void>;
+
 export function UpdateBusinessUnit(arg1:main.BusinessUnit):Promise<main.BusinessUnit>;
 
 export function UpdateClient(arg1:main.Client):Promise<main.Client>;
+
+export function UpdateEpic(arg1:main.Epic):Promise<main.Epic>;
 
 export function UpdateIdea(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string,arg6:string,arg7:Array<string>):Promise<main.Idea>;
 
@@ -191,3 +253,5 @@ export function UpdateProject(arg1:main.Project):Promise<main.Project>;
 export function UpdateSuggestedTaskStatus(arg1:string,arg2:number,arg3:string):Promise<main.Idea>;
 
 export function UpdateTask(arg1:main.Task):Promise<main.Task>;
+
+export function UpdateTicket(arg1:main.Ticket):Promise<main.Ticket>;

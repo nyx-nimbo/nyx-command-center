@@ -18,12 +18,24 @@ export function AddSuggestedTask(arg1, arg2, arg3) {
   return window['go']['main']['App']['AddSuggestedTask'](arg1, arg2, arg3);
 }
 
+export function AssignAgentToProject(arg1, arg2, arg3) {
+  return window['go']['main']['App']['AssignAgentToProject'](arg1, arg2, arg3);
+}
+
+export function AssignTicket(arg1, arg2) {
+  return window['go']['main']['App']['AssignTicket'](arg1, arg2);
+}
+
 export function AutoRepair(arg1) {
   return window['go']['main']['App']['AutoRepair'](arg1);
 }
 
 export function AutoResearchIdea(arg1) {
   return window['go']['main']['App']['AutoResearchIdea'](arg1);
+}
+
+export function BulkUpdateTicketStatus(arg1, arg2) {
+  return window['go']['main']['App']['BulkUpdateTicketStatus'](arg1, arg2);
 }
 
 export function CheckGoogleAuth() {
@@ -86,6 +98,10 @@ export function CreateEnvFromExample(arg1, arg2) {
   return window['go']['main']['App']['CreateEnvFromExample'](arg1, arg2);
 }
 
+export function CreateEpic(arg1) {
+  return window['go']['main']['App']['CreateEpic'](arg1);
+}
+
 export function CreateEvent(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['CreateEvent'](arg1, arg2, arg3, arg4);
 }
@@ -106,12 +122,24 @@ export function CreateTask(arg1) {
   return window['go']['main']['App']['CreateTask'](arg1);
 }
 
+export function CreateTicket(arg1) {
+  return window['go']['main']['App']['CreateTicket'](arg1);
+}
+
+export function DeleteAgent(arg1) {
+  return window['go']['main']['App']['DeleteAgent'](arg1);
+}
+
 export function DeleteBusinessUnit(arg1) {
   return window['go']['main']['App']['DeleteBusinessUnit'](arg1);
 }
 
 export function DeleteClient(arg1) {
   return window['go']['main']['App']['DeleteClient'](arg1);
+}
+
+export function DeleteEpic(arg1) {
+  return window['go']['main']['App']['DeleteEpic'](arg1);
 }
 
 export function DeleteEvent(arg1) {
@@ -138,8 +166,28 @@ export function DeleteTask(arg1) {
   return window['go']['main']['App']['DeleteTask'](arg1);
 }
 
+export function DeleteTicket(arg1) {
+  return window['go']['main']['App']['DeleteTicket'](arg1);
+}
+
+export function GenerateTickets(arg1) {
+  return window['go']['main']['App']['GenerateTickets'](arg1);
+}
+
 export function GetActivityForEntity(arg1, arg2) {
   return window['go']['main']['App']['GetActivityForEntity'](arg1, arg2);
+}
+
+export function GetAgent(arg1) {
+  return window['go']['main']['App']['GetAgent'](arg1);
+}
+
+export function GetAgentProjects(arg1) {
+  return window['go']['main']['App']['GetAgentProjects'](arg1);
+}
+
+export function GetAgents() {
+  return window['go']['main']['App']['GetAgents']();
 }
 
 export function GetAllGroups() {
@@ -198,6 +246,14 @@ export function GetEnvVariables(arg1, arg2) {
   return window['go']['main']['App']['GetEnvVariables'](arg1, arg2);
 }
 
+export function GetEpic(arg1) {
+  return window['go']['main']['App']['GetEpic'](arg1);
+}
+
+export function GetEpicsByProject(arg1) {
+  return window['go']['main']['App']['GetEpicsByProject'](arg1);
+}
+
 export function GetGoogleUserInfo() {
   return window['go']['main']['App']['GetGoogleUserInfo']();
 }
@@ -216,6 +272,14 @@ export function GetInstanceId() {
 
 export function GetProject(arg1) {
   return window['go']['main']['App']['GetProject'](arg1);
+}
+
+export function GetProjectAssignments(arg1) {
+  return window['go']['main']['App']['GetProjectAssignments'](arg1);
+}
+
+export function GetProjectAssignmentsWithRoles(arg1) {
+  return window['go']['main']['App']['GetProjectAssignmentsWithRoles'](arg1);
 }
 
 export function GetProjectStats(arg1) {
@@ -246,6 +310,26 @@ export function GetTasks(arg1, arg2) {
   return window['go']['main']['App']['GetTasks'](arg1, arg2);
 }
 
+export function GetTicket(arg1) {
+  return window['go']['main']['App']['GetTicket'](arg1);
+}
+
+export function GetTicketStats(arg1) {
+  return window['go']['main']['App']['GetTicketStats'](arg1);
+}
+
+export function GetTicketsByEpic(arg1) {
+  return window['go']['main']['App']['GetTicketsByEpic'](arg1);
+}
+
+export function GetTicketsByProject(arg1) {
+  return window['go']['main']['App']['GetTicketsByProject'](arg1);
+}
+
+export function GetTicketsByStatus(arg1, arg2) {
+  return window['go']['main']['App']['GetTicketsByStatus'](arg1, arg2);
+}
+
 export function GetTodayEvents() {
   return window['go']['main']['App']['GetTodayEvents']();
 }
@@ -258,8 +342,16 @@ export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
 }
 
+export function IsAgentAssigned(arg1, arg2) {
+  return window['go']['main']['App']['IsAgentAssigned'](arg1, arg2);
+}
+
 export function ListChatSessions() {
   return window['go']['main']['App']['ListChatSessions']();
+}
+
+export function LoadSessions() {
+  return window['go']['main']['App']['LoadSessions']();
 }
 
 export function LogActivity(arg1, arg2, arg3, arg4, arg5) {
@@ -282,6 +374,10 @@ export function MoveProjectToStandalone(arg1) {
   return window['go']['main']['App']['MoveProjectToStandalone'](arg1);
 }
 
+export function MoveTicket(arg1, arg2) {
+  return window['go']['main']['App']['MoveTicket'](arg1, arg2);
+}
+
 export function OpenInFinder(arg1) {
   return window['go']['main']['App']['OpenInFinder'](arg1);
 }
@@ -298,12 +394,28 @@ export function PullLatest(arg1) {
   return window['go']['main']['App']['PullLatest'](arg1);
 }
 
+export function RegisterAgent(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['RegisterAgent'](arg1, arg2, arg3, arg4);
+}
+
 export function RemovePort(arg1, arg2) {
   return window['go']['main']['App']['RemovePort'](arg1, arg2);
 }
 
+export function ReorderTicket(arg1, arg2) {
+  return window['go']['main']['App']['ReorderTicket'](arg1, arg2);
+}
+
+export function ResetHandshake() {
+  return window['go']['main']['App']['ResetHandshake']();
+}
+
 export function SaveEnvFileContent(arg1, arg2, arg3) {
   return window['go']['main']['App']['SaveEnvFileContent'](arg1, arg2, arg3);
+}
+
+export function SaveSession(arg1) {
+  return window['go']['main']['App']['SaveSession'](arg1);
 }
 
 export function ScanEnvFiles(arg1) {
@@ -354,12 +466,24 @@ export function SwitchSession(arg1) {
   return window['go']['main']['App']['SwitchSession'](arg1);
 }
 
+export function UnassignAgentFromProject(arg1, arg2) {
+  return window['go']['main']['App']['UnassignAgentFromProject'](arg1, arg2);
+}
+
+export function UpdateAgentStatus(arg1, arg2) {
+  return window['go']['main']['App']['UpdateAgentStatus'](arg1, arg2);
+}
+
 export function UpdateBusinessUnit(arg1) {
   return window['go']['main']['App']['UpdateBusinessUnit'](arg1);
 }
 
 export function UpdateClient(arg1) {
   return window['go']['main']['App']['UpdateClient'](arg1);
+}
+
+export function UpdateEpic(arg1) {
+  return window['go']['main']['App']['UpdateEpic'](arg1);
 }
 
 export function UpdateIdea(arg1, arg2, arg3, arg4, arg5, arg6, arg7) {
@@ -380,4 +504,8 @@ export function UpdateSuggestedTaskStatus(arg1, arg2, arg3) {
 
 export function UpdateTask(arg1) {
   return window['go']['main']['App']['UpdateTask'](arg1);
+}
+
+export function UpdateTicket(arg1) {
+  return window['go']['main']['App']['UpdateTicket'](arg1);
 }

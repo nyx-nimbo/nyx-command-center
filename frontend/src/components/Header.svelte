@@ -30,6 +30,15 @@
 
   let handshakeError = ''
 
+  async function resetHandshake() {
+    try {
+      await window['go']['main']['App']['ResetHandshake']()
+      handshakeState = 'idle'
+    } catch (err) {
+      console.error('[Handshake] Reset error:', err)
+    }
+  }
+
   async function performHandshake() {
     handshakeState = 'connecting'
     handshakeError = ''
@@ -144,37 +153,44 @@
     <h1 class="page-title">{title}</h1>
   </div>
   <div class="header-right">
-    <div class="health-dot" style="background: {healthColor}; box-shadow: 0 0 6px {healthColor}40;" title="System Health"></div>
+    <div class="header-indicator" title="System Health: verifica OpenClaw Gateway, MongoDB y Google OAuth. Verde = todo bien, amarillo = degradado, rojo = error.">
+      <span class="indicator-label">SYS</span>
+      <div class="health-dot" style="background: {healthColor}; box-shadow: 0 0 6px {healthColor}40;"></div>
+    </div>
 
-    <div class="sync-indicator" class:syncing={syncActive} title="Hive Mind Sync — Last: {lastSyncAgo}">
+    <div class="sync-indicator" class:syncing={syncActive} title="Hive Mind Sync — sincronización entre agentes activos. {syncActive ? 'Sincronizando ahora...' : 'Última sync: ' + lastSyncAgo}">
       <span class="sync-icon">{syncActive ? '↻' : '⬡'}</span>
     </div>
 
     {#if handshakeState === 'idle'}
-      <button class="handshake-btn pulse" on:click={performHandshake} title="Connect Agent">
+      <button class="handshake-btn pulse" on:click={performHandshake} title="Conectar agente — envía las capacidades de Nyx al agente OpenClaw para que sepa cómo usar esta app.">
         <span class="handshake-icon">🤝</span>
         <span class="handshake-text">Connect Agent</span>
       </button>
     {:else if handshakeState === 'connecting'}
-      <div class="handshake-btn connecting">
+      <div class="handshake-btn connecting" title="Estableciendo conexión con el agente...">
         <span class="handshake-spinner"></span>
         <span class="handshake-text">Connecting...</span>
       </div>
     {:else if handshakeState === 'connected'}
-      <div class="handshake-badge connected">
+      <div class="handshake-badge connected" title="Agente conectado correctamente.">
         <span class="handshake-dot"></span>
         <span class="handshake-text">Agent Connected</span>
       </div>
     {:else if handshakeState === 'error'}
-      <div class="handshake-badge error" title={handshakeError}>
+      <div class="handshake-badge error" title="Error al conectar: {handshakeError}">
         <span class="handshake-error-icon">⚠</span>
         <span class="handshake-text">{handshakeError.substring(0, 40)}</span>
       </div>
     {:else if handshakeState === 'minimized'}
-      <div class="handshake-dot-only" title="Agent Connected"></div>
+      <div class="handshake-connected-area" title="Agente OpenClaw conectado. Hover para reconectar.">
+        <span class="indicator-label agent-label">AI</span>
+        <div class="handshake-dot-only"></div>
+        <button class="handshake-reset-btn" on:click={resetHandshake} title="Forzar reconexión del agente">↺</button>
+      </div>
     {/if}
 
-    <div class="status-indicator" class:online={statusOnline} class:offline={!statusOnline}>
+    <div class="status-indicator" class:online={statusOnline} class:offline={!statusOnline} title="Estado de red — {statusOnline ? 'conectado a internet' : 'sin conexión'}">
       <span class="status-dot"></span>
       <span class="status-text">{statusOnline ? 'Online' : 'Offline'}</span>
     </div>
@@ -245,9 +261,30 @@
     gap: 16px;
   }
 
+  .header-indicator {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: default;
+  }
+
+  .indicator-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    line-height: 1;
+  }
+
+  .agent-label {
+    color: #22c55e;
+    opacity: 0.8;
+  }
+
   .health-dot {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     transition: background 0.3s, box-shadow 0.3s;
   }
@@ -508,6 +545,12 @@
     font-size: 12px;
   }
 
+  .handshake-connected-area {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
   .handshake-dot-only {
     width: 8px;
     height: 8px;
@@ -515,6 +558,26 @@
     background: #22c55e;
     box-shadow: 0 0 6px rgba(34, 197, 94, 0.4);
     animation: handshake-fade-in 0.3s ease;
+  }
+
+  .handshake-reset-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    padding: 0 2px;
+    line-height: 1;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .handshake-connected-area:hover .handshake-reset-btn {
+    opacity: 1;
+  }
+
+  .handshake-reset-btn:hover {
+    color: var(--text-secondary);
   }
 
   /* Sync Indicator */

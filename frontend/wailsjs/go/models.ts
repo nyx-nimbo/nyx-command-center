@@ -30,6 +30,32 @@ export namespace main {
 	        this.synced = source["synced"];
 	    }
 	}
+	export class Agent {
+	    id: string;
+	    agentId: string;
+	    name: string;
+	    type: string;
+	    status: string;
+	    capabilities: string[];
+	    lastSeen: string;
+	    registeredAt: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new Agent(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.agentId = source["agentId"];
+	        this.name = source["name"];
+	        this.type = source["type"];
+	        this.status = source["status"];
+	        this.capabilities = source["capabilities"];
+	        this.lastSeen = source["lastSeen"];
+	        this.registeredAt = source["registeredAt"];
+	    }
+	}
 	export class AppInfo {
 	    name: string;
 	    version: string;
@@ -365,6 +391,134 @@ export namespace main {
 	        this.key = source["key"];
 	        this.value = source["value"];
 	    }
+	}
+	export class Epic {
+	    id: string;
+	    projectId: string;
+	    code: string;
+	    title: string;
+	    description: string;
+	    status: string;
+	    createdAt: string;
+	    updatedAt: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new Epic(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.projectId = source["projectId"];
+	        this.code = source["code"];
+	        this.title = source["title"];
+	        this.description = source["description"];
+	        this.status = source["status"];
+	        this.createdAt = source["createdAt"];
+	        this.updatedAt = source["updatedAt"];
+	    }
+	}
+	export class GenerateTicketsRequest {
+	    projectId: string;
+	    description: string;
+	    createEpic: boolean;
+	    status: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new GenerateTicketsRequest(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.projectId = source["projectId"];
+	        this.description = source["description"];
+	        this.createEpic = source["createEpic"];
+	        this.status = source["status"];
+	    }
+	}
+	export class Ticket {
+	    id: string;
+	    projectId: string;
+	    epicId: string;
+	    code: string;
+	    title: string;
+	    description: string;
+	    scope: string;
+	    acceptanceCriteria: string[];
+	    technicalNotes: string;
+	    type: string;
+	    status: string;
+	    priority: string;
+	    estimate: string;
+	    storyPoints: number;
+	    assignedTo: string;
+	    tags: string[];
+	    order: number;
+	    createdAt: string;
+	    updatedAt: string;
+	    startedAt: string;
+	    completedAt: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new Ticket(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.projectId = source["projectId"];
+	        this.epicId = source["epicId"];
+	        this.code = source["code"];
+	        this.title = source["title"];
+	        this.description = source["description"];
+	        this.scope = source["scope"];
+	        this.acceptanceCriteria = source["acceptanceCriteria"];
+	        this.technicalNotes = source["technicalNotes"];
+	        this.type = source["type"];
+	        this.status = source["status"];
+	        this.priority = source["priority"];
+	        this.estimate = source["estimate"];
+	        this.storyPoints = source["storyPoints"];
+	        this.assignedTo = source["assignedTo"];
+	        this.tags = source["tags"];
+	        this.order = source["order"];
+	        this.createdAt = source["createdAt"];
+	        this.updatedAt = source["updatedAt"];
+	        this.startedAt = source["startedAt"];
+	        this.completedAt = source["completedAt"];
+	    }
+	}
+	export class GenerateTicketsResult {
+	    epic?: Epic;
+	    tickets: Ticket[];
+	
+	    static createFrom(source: any = {}) {
+	        return new GenerateTicketsResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.epic = this.convertValues(source["epic"], Epic);
+	        this.tickets = this.convertValues(source["tickets"], Ticket);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
 	}
 	export class GoogleAuthStatus {
 	    authenticated: boolean;
@@ -716,6 +870,26 @@ export namespace main {
 		    return a;
 		}
 	}
+	export class ProjectAssignment {
+	    id: string;
+	    projectId: string;
+	    agentId: string;
+	    role: string;
+	    assignedAt: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new ProjectAssignment(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.projectId = source["projectId"];
+	        this.agentId = source["agentId"];
+	        this.role = source["role"];
+	        this.assignedAt = source["assignedAt"];
+	    }
+	}
 	export class ProjectLocalStatus {
 	    isCloned: boolean;
 	    localPath: string;
@@ -817,6 +991,29 @@ export namespace main {
 	        this.createdAt = source["createdAt"];
 	        this.updatedAt = source["updatedAt"];
 	        this.completedAt = source["completedAt"];
+	    }
+	}
+	
+	export class TicketStats {
+	    draft: number;
+	    ready: number;
+	    inProgress: number;
+	    review: number;
+	    done: number;
+	    total: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new TicketStats(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.draft = source["draft"];
+	        this.ready = source["ready"];
+	        this.inProgress = source["inProgress"];
+	        this.review = source["review"];
+	        this.done = source["done"];
+	        this.total = source["total"];
 	    }
 	}
 
