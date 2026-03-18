@@ -96,6 +96,8 @@ func (c *ErebusWSClient) generateJWT() (string, error) {
 		name = "Nyx Erebus"
 	}
 
+	// Use agent: prefix to avoid conflicts with PWA connections using same email
+	email = "agent:" + email
 	logToFile("generateJWT: email=%s name=%s", email, name)
 
 	now := time.Now()
@@ -143,9 +145,10 @@ func (c *ErebusWSClient) connect() error {
 	}
 
 	// Set read deadline and pong handler for keepalive
-	conn.SetReadDeadline(time.Now().Add(90 * time.Second))
+	// Use a long deadline to avoid premature disconnects
+	conn.SetReadDeadline(time.Now().Add(300 * time.Second))
 	conn.SetPongHandler(func(string) error {
-		conn.SetReadDeadline(time.Now().Add(90 * time.Second))
+		conn.SetReadDeadline(time.Now().Add(300 * time.Second))
 		return nil
 	})
 
@@ -221,10 +224,12 @@ func (c *ErebusWSClient) readLoop() {
 			// Check if this was an intentional disconnect
 			select {
 			case <-c.done:
+				logToFile("readLoop() done signal, exiting")
 				return
 			default:
 			}
 
+			logToFile("readLoop() read error: %v", err)
 			log.Printf("[erebus-ws] Read error: %v", err)
 
 			// Unexpected disconnect — clean up and reconnect
@@ -317,7 +322,15 @@ func (c *ErebusWSClient) pingLoop() {
 }
 
 func (c *ErebusWSClient) reconnectWithBackoff() {
-	backoffs := []time.Duration{5 * time.Second, 10 * time.Second, 30 * time.Second, 60 * time.Second}
+	// Only allow one reconnect loop at a time
+	c.mu.Lock()
+	if c.status == "connecting" || c.status == "connected" {
+		c.mu.Unlock()
+		return
+	}
+	c.mu.Unlock()
+
+	backoffs := []time.Duration{10 * time.Second, 30 * time.Second, 60 * time.Second, 120 * time.Second}
 
 	for attempt := 0; ; attempt++ {
 		c.mu.Lock()
@@ -331,7 +344,7 @@ func (c *ErebusWSClient) reconnectWithBackoff() {
 		if attempt < len(backoffs) {
 			delay = backoffs[attempt]
 		}
-		log.Printf("[erebus-ws] Reconnecting in %v...", delay)
+		logToFile("reconnect attempt %d, waiting %v", attempt, delay)
 		time.Sleep(delay)
 
 		if c.getStatus() == "connected" {
@@ -339,7 +352,7 @@ func (c *ErebusWSClient) reconnectWithBackoff() {
 		}
 
 		if err := c.connect(); err != nil {
-			log.Printf("[erebus-ws] Reconnect failed: %v", err)
+			logToFile("reconnect failed: %v", err)
 			continue
 		}
 		return
