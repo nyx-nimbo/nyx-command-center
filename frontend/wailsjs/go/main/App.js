@@ -74,6 +74,10 @@ export function CloneRepository(arg1) {
   return window['go']['main']['App']['CloneRepository'](arg1);
 }
 
+export function ConnectErebusWS() {
+  return window['go']['main']['App']['ConnectErebusWS']();
+}
+
 export function ConvertIdeaToProject(arg1) {
   return window['go']['main']['App']['ConvertIdeaToProject'](arg1);
 }
@@ -170,6 +174,10 @@ export function DeleteTicket(arg1) {
   return window['go']['main']['App']['DeleteTicket'](arg1);
 }
 
+export function DisconnectErebusWS() {
+  return window['go']['main']['App']['DisconnectErebusWS']();
+}
+
 export function GenerateTickets(arg1) {
   return window['go']['main']['App']['GenerateTickets'](arg1);
 }
@@ -252,6 +260,10 @@ export function GetEpic(arg1) {
 
 export function GetEpicsByProject(arg1) {
   return window['go']['main']['App']['GetEpicsByProject'](arg1);
+}
+
+export function GetErebusWSStatus() {
+  return window['go']['main']['App']['GetErebusWSStatus']();
 }
 
 export function GetGoogleUserInfo() {
@@ -432,6 +444,10 @@ export function SearchKnowledge(arg1, arg2) {
 
 export function SendEmail(arg1, arg2, arg3) {
   return window['go']['main']['App']['SendEmail'](arg1, arg2, arg3);
+}
+
+export function SendErebusMessage(arg1, arg2) {
+  return window['go']['main']['App']['SendErebusMessage'](arg1, arg2);
 }
 
 export function SetEnvVariable(arg1, arg2, arg3, arg4) {

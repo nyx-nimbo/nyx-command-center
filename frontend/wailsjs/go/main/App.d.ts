@@ -38,6 +38,8 @@ export function ClearChatHistory(arg1:string):Promise<void>;
 
 export function CloneRepository(arg1:string):Promise<string>;
 
+export function ConnectErebusWS():Promise<void>;
+
 export function ConvertIdeaToProject(arg1:string):Promise<main.Project>;
 
 export function ConvertToGroup(arg1:string):Promise<main.Project>;
@@ -86,6 +88,8 @@ export function DeleteTask(arg1:string):Promise<void>;
 
 export function DeleteTicket(arg1:string):Promise<void>;
 
+export function DisconnectErebusWS():Promise<void>;
+
 export function GenerateTickets(arg1:main.GenerateTicketsRequest):Promise<main.GenerateTicketsResult>;
 
 export function GetActivityForEntity(arg1:string,arg2:string):Promise<Array<main.ActivityLogEntry>>;
@@ -127,6 +131,8 @@ export function GetEnvVariables(arg1:string,arg2:string):Promise<Array<main.EnvV
 export function GetEpic(arg1:string):Promise<main.Epic>;
 
 export function GetEpicsByProject(arg1:string):Promise<Array<main.Epic>>;
+
+export function GetErebusWSStatus():Promise<string>;
 
 export function GetGoogleUserInfo():Promise<main.GoogleUserInfo>;
 
@@ -217,6 +223,8 @@ export function SearchIdeas(arg1:string):Promise<Array<main.Idea>>;
 export function SearchKnowledge(arg1:string,arg2:number):Promise<Array<main.KnowledgeSearchResult>>;
 
 export function SendEmail(arg1:string,arg2:string,arg3:string):Promise<main.SendEmailResult>;
+
+export function SendErebusMessage(arg1:string,arg2:string):Promise<void>;
 
 export function SetEnvVariable(arg1:string,arg2:string,arg3:string,arg4:string):Promise<void>;
 

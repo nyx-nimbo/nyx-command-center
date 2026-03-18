@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -58,19 +59,51 @@ func newErebusWSClient(app *App) *ErebusWSClient {
 	}
 }
 
-// generateJWT creates a signed JWT using the Google account info.
+// generateJWT creates a signed JWT using the Google account info, falling back to stored credentials.
 func (c *ErebusWSClient) generateJWT() (string, error) {
+	email := ""
+	name := ""
+	picture := ""
+
+	// Try Google user info first
 	userInfo := c.app.GetGoogleUserInfo()
-	if userInfo.Email == "" {
-		return "", fmt.Errorf("no Google account logged in")
+	if userInfo.Email != "" {
+		email = userInfo.Email
+		name = userInfo.Name
+		picture = userInfo.Picture
+	} else {
+		// Fallback: read from stored token file
+		tokenPath := os.ExpandEnv("$HOME/.openclaw/workspace/.credentials/google_token.json")
+		data, err := os.ReadFile(tokenPath)
+		if err == nil {
+			var tokenData map[string]interface{}
+			if json.Unmarshal(data, &tokenData) == nil {
+				// Try to get email from token claims
+				if e, ok := tokenData["email"].(string); ok {
+					email = e
+				}
+			}
+		}
+
+		// Final fallback: use known identity
+		if email == "" {
+			email = "nyx@nimbo.mx"
+			name = "Nyx Erebus"
+		}
 	}
+
+	if name == "" {
+		name = "Nyx Erebus"
+	}
+
+	logToFile("generateJWT: email=%s name=%s", email, name)
 
 	now := time.Now()
 	claims := jwt.MapClaims{
-		"email":   userInfo.Email,
-		"name":    userInfo.Name,
-		"picture": userInfo.Picture,
-		"sub":     userInfo.Email,
+		"email":   email,
+		"name":    name,
+		"picture": picture,
+		"sub":     email,
 		"iss":     "nyx-command-center",
 		"iat":     now.Unix(),
 		"exp":     now.Add(24 * time.Hour).Unix(),
@@ -81,9 +114,12 @@ func (c *ErebusWSClient) generateJWT() (string, error) {
 }
 
 func (c *ErebusWSClient) connect() error {
+	logToFile("connect() called, current status=%s", c.getStatus())
+
 	c.mu.Lock()
 	if c.status == "connected" || c.status == "connecting" {
 		c.mu.Unlock()
+		logToFile("connect() skipped: already %s", c.status)
 		return nil
 	}
 	c.status = "connecting"
@@ -93,10 +129,13 @@ func (c *ErebusWSClient) connect() error {
 	token, err := c.generateJWT()
 	if err != nil {
 		c.setStatus("disconnected")
+		logToFile("connect() JWT failed: %v", err)
 		return fmt.Errorf("JWT generation failed: %w", err)
 	}
+	logToFile("connect() JWT generated OK")
 
 	wsURL := erebusWSURL + "?token=" + token
+	logToFile("connect() dialing %s", erebusWSURL)
 	conn, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
 	if err != nil {
 		c.setStatus("disconnected")
@@ -117,6 +156,7 @@ func (c *ErebusWSClient) connect() error {
 	c.mu.Unlock()
 
 	log.Printf("[erebus-ws] Connected to %s", erebusWSURL)
+	logToFile("connect() SUCCESS - connected to %s", erebusWSURL)
 	runtime.EventsEmit(c.app.ctx, "ws:connected", nil)
 
 	go c.readLoop()
@@ -166,11 +206,13 @@ func (c *ErebusWSClient) disconnect() {
 }
 
 func (c *ErebusWSClient) readLoop() {
+	logToFile("readLoop() started")
 	for {
 		c.mu.Lock()
 		conn := c.conn
 		c.mu.Unlock()
 		if conn == nil {
+			logToFile("readLoop() conn is nil, exiting")
 			return
 		}
 
@@ -324,8 +366,22 @@ func (c *ErebusWSClient) sendMessage(toId, content string) error {
 }
 
 // handleIncomingMessage processes an incoming message by calling OpenClaw and responding.
+func logToFile(format string, args ...interface{}) {
+	f, err := os.OpenFile("/tmp/erebus-ws-debug.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+	msg := fmt.Sprintf(time.Now().Format("15:04:05")+" "+format+"\n", args...)
+	f.WriteString(msg)
+}
+
 func (c *ErebusWSClient) handleIncomingMessage(msg wsIncomingMessage) {
+	logToFile("handleIncomingMessage: from=%s content=%s", msg.FromName, msg.Content)
+
 	userInfo := c.app.GetGoogleUserInfo()
+	logToFile("Google user info: email=%s name=%s", userInfo.Email, userInfo.Name)
+
 	agentName := userInfo.Name
 	if agentName == "" {
 		agentName = "Nyx Agent"
@@ -364,6 +420,7 @@ func (c *ErebusWSClient) handleIncomingMessage(msg wsIncomingMessage) {
 	req.Header.Set("x-openclaw-agent-id", openclawAgent)
 	req.Header.Set("x-openclaw-session-key", "erebus-"+msg.FromId)
 
+	logToFile("Calling OpenClaw: url=%s", openclawURL)
 	client := &http.Client{Timeout: 120 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -372,8 +429,10 @@ func (c *ErebusWSClient) handleIncomingMessage(msg wsIncomingMessage) {
 	}
 	defer resp.Body.Close()
 
+	logToFile("OpenClaw response status: %d", resp.StatusCode)
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
+		logToFile("OpenClaw error: %s", string(body))
 		log.Printf("[erebus-ws] OpenClaw error %d: %s", resp.StatusCode, string(body))
 		return
 	}
@@ -396,6 +455,7 @@ func (c *ErebusWSClient) handleIncomingMessage(msg wsIncomingMessage) {
 	}
 
 	response := completion.Choices[0].Message.Content
+	logToFile("OpenClaw response: %s", truncate(response, 200))
 	log.Printf("[erebus-ws] Responding to %s: %s", msg.FromId, truncate(response, 80))
 
 	if err := c.sendMessage(msg.FromId, response); err != nil {
