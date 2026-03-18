@@ -326,6 +326,10 @@ export function GetTicket(arg1) {
   return window['go']['main']['App']['GetTicket'](arg1);
 }
 
+export function GetTicketAgentStatus() {
+  return window['go']['main']['App']['GetTicketAgentStatus']();
+}
+
 export function GetTicketStats(arg1) {
   return window['go']['main']['App']['GetTicketStats'](arg1);
 }
@@ -466,8 +470,16 @@ export function StartSync() {
   return window['go']['main']['App']['StartSync']();
 }
 
+export function StartTicketAgent() {
+  return window['go']['main']['App']['StartTicketAgent']();
+}
+
 export function StopSync() {
   return window['go']['main']['App']['StopSync']();
+}
+
+export function StopTicketAgent() {
+  return window['go']['main']['App']['StopTicketAgent']();
 }
 
 export function StreamChat(arg1, arg2) {

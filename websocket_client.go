@@ -100,8 +100,7 @@ func (c *ErebusWSClient) generateJWT() (string, error) {
 		name = "Nyx Erebus"
 	}
 
-	// Use agent: prefix to avoid conflicts with PWA connections using same email
-	email = "agent:" + email
+	// Use email as-is — one identity per user regardless of connection source
 	logToFile("generateJWT: email=%s name=%s", email, name)
 
 	now := time.Now()

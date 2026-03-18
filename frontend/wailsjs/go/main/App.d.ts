@@ -164,6 +164,8 @@ export function GetTasks(arg1:string,arg2:string):Promise<Array<main.Task>>;
 
 export function GetTicket(arg1:string):Promise<main.Ticket>;
 
+export function GetTicketAgentStatus():Promise<Record<string, any>>;
+
 export function GetTicketStats(arg1:string):Promise<main.TicketStats>;
 
 export function GetTicketsByEpic(arg1:string):Promise<Array<main.Ticket>>;
@@ -234,7 +236,11 @@ export function StartGoogleLogin():Promise<main.GoogleAuthStatus>;
 
 export function StartSync():Promise<void>;
 
+export function StartTicketAgent():Promise<void>;
+
 export function StopSync():Promise<void>;
+
+export function StopTicketAgent():Promise<void>;
 
 export function StreamChat(arg1:string,arg2:string):Promise<void>;
 
