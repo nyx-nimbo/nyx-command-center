@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,6 +11,9 @@ import (
 	"os"
 	"sync"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/websocket"
@@ -473,6 +477,42 @@ func (c *ErebusWSClient) handleIncomingMessage(msg wsIncomingMessage) {
 
 	if err := c.sendMessage(msg.FromId, response); err != nil {
 		log.Printf("[erebus-ws] Failed to send response: %v", err)
+	}
+
+	// Also save response to MongoDB so the PWA can load it via REST API
+	go c.saveResponseToMongoDB(msg.FromId, msg.FromName, response)
+}
+
+func (c *ErebusWSClient) saveResponseToMongoDB(toId, toName, content string) {
+	db, err := getDB()
+	if err != nil {
+		logToFile("saveResponse: DB error: %v", err)
+		return
+	}
+
+	agentEmail := "nyx@nimbo.mx"
+	agentName := "Nyx Erebus"
+
+	doc := bson.M{
+		"_id":       primitive.NewObjectID().Hex(),
+		"fromId":    agentEmail,
+		"fromName":  agentName,
+		"fromType":  "agent",
+		"toId":      toId,
+		"toName":    toName,
+		"content":   content,
+		"read":      false,
+		"createdAt": time.Now().Format(time.RFC3339),
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err = db.Collection("messages").InsertOne(ctx, doc)
+	if err != nil {
+		logToFile("saveResponse: insert error: %v", err)
+	} else {
+		logToFile("saveResponse: saved to MongoDB")
 	}
 }
 
