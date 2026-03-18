@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"embed"
+	"log"
 
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -31,8 +32,14 @@ func main() {
 		OnDomReady: func(ctx context.Context) {
 			go app.CheckHealth()
 			go app.StartSync()
+			go func() {
+				if err := app.ConnectErebusWS(); err != nil {
+					log.Printf("[erebus-ws] Auto-connect failed: %v", err)
+				}
+			}()
 		},
 		OnShutdown: func(ctx context.Context) {
+			app.DisconnectErebusWS()
 			app.StopSync()
 		},
 		Bind: []interface{}{

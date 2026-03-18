@@ -23,6 +23,7 @@ type App struct {
 	ctx      context.Context
 	sessions map[string]*ChatSession
 	sessMu   sync.Mutex
+	erebusWS *ErebusWSClient
 }
 
 // ChatSession represents a single chat session/channel

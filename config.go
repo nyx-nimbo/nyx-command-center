@@ -32,6 +32,12 @@ func init() {
 	if v := os.Getenv("OPENCLAW_URL"); v != "" {
 		openclawURL = v
 	}
+	if v := os.Getenv("EREBUS_WS_URL"); v != "" {
+		erebusWSURL = v
+	}
+	if v := os.Getenv("EREBUS_JWT_SECRET"); v != "" {
+		erebusJWTSecret = v
+	}
 
 	// Debug: log loaded config
 	fmt.Printf("[Config] OPENCLAW_URL=%s\n", openclawURL)
